@@ -2406,3 +2406,41 @@ func mostPoints(questions [][]int) int64 {
 
 	return recurse(0)
 }
+
+// maximum dishes cooked with the given satisfaction range
+func maxSatisfaction(satisfaction []int) int {
+	// sorting to make sure its all in descending order
+	sort.Slice(satisfaction, func(i, j int) bool {
+		return satisfaction[i] < satisfaction[j]
+	})
+
+	memo := make(map[string]int)
+
+	var recurse func(int, int) int
+	recurse = func(currIndex, time int) int {
+		// cached max
+		cacheKey := strconv.Itoa(currIndex) + "-" + strconv.Itoa(time)
+		if val, found := memo[cacheKey]; found {
+			return val
+		}
+
+		if currIndex >= len(satisfaction) {
+			return 0
+		}
+
+		maxSatisfactionScore := 0
+
+		skipCurrent := recurse(currIndex+1, time)
+		includeCurrent := satisfaction[currIndex]*time + recurse(currIndex+1, time+1)
+
+		maxSatisfactionScore = max(skipCurrent, includeCurrent)
+		memo[cacheKey] = maxSatisfactionScore
+		return maxSatisfactionScore
+	}
+
+	maxDishScore := recurse(0, 1)
+	if maxDishScore < 0 {
+		return 0
+	}
+	return maxDishScore
+}
