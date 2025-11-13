@@ -2444,3 +2444,78 @@ func maxSatisfaction(satisfaction []int) int {
 	}
 	return maxDishScore
 }
+
+// getting minimum distance based on median value between houses...
+func minDistance(houses []int, k int) int {
+	// sorting the houses
+	sort.Slice(houses, func(i, j int) bool {
+		return houses[i] < houses[j]
+	})
+	// cost matrix
+	costs := make([][]int, len(houses))
+	cache := make(map[string]int)
+	// abs function for absolute substraction
+	abs := func(x int) int {
+		if x < 0 {
+			return -x
+		}
+		return x
+	}
+	// populating cost matrix with the appropriate median index value
+	for index := 0; index < len(houses); index++ {
+		costs[index] = make([]int, len(houses))
+		for subIndex := range costs[index] {
+			costs[index][subIndex] = 0
+		}
+	}
+	//calculating costs median value and populating the sub matrix array
+	for i := 0; i < len(houses); i++ {
+		for j := i; j < len(houses); j++ {
+			currMedianIndex := (i + j) / 2
+			currMedianValue := houses[currMedianIndex]
+
+			totalCostPerRange := 0
+
+			// calculating the median value for every subrange
+			for rangeIndex := i; rangeIndex <= j; rangeIndex++ {
+				currentRangeDistance := abs(houses[rangeIndex] - currMedianValue)
+				totalCostPerRange += currentRangeDistance
+			}
+			// updating median cost value per sub range
+			costs[i][j] = totalCostPerRange
+		}
+	}
+
+	var recurse func(int, int) int
+	recurse = func(currIndex, kRemaining int) int {
+		// cached value for minimum cost
+		cacheKey := strconv.Itoa(currIndex) + "-" + strconv.Itoa(kRemaining)
+		if val, found := cache[cacheKey]; found {
+			return val
+		}
+		// primary base conditions for checking for the subcost calculation
+		if currIndex >= len(houses) {
+			return 0
+		}
+		if kRemaining <= 0 {
+			return math.MaxInt32 / 2
+		}
+		// when one mail box remaining it can serve all the houses... tricky
+		if kRemaining == 1 {
+			return costs[currIndex][len(houses)-1] // ✅ All remaining houses
+		}
+		minCostCalculation := math.MaxInt32 / 2
+		// main dfs recursive logic to testing between every sub cost value
+		for index := currIndex; index < len(houses); index++ {
+			currCost := costs[currIndex][index]
+			totalPreviousCost := recurse(index+1, kRemaining-1)
+			if totalPreviousCost < math.MaxInt32/2 { // only can calculate the total cost if its below the desired base case limit
+				minCostCalculation = min(minCostCalculation, currCost+totalPreviousCost)
+			}
+		}
+		cache[cacheKey] = minCostCalculation
+		return minCostCalculation
+	}
+
+	return recurse(0, k)
+}
