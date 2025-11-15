@@ -2519,3 +2519,40 @@ func minDistance(houses []int, k int) int {
 
 	return recurse(0, k)
 }
+
+// getting max two events
+func maxTwoEvents(events [][]int) int {
+	// sorting the events based on starting time
+	sort.Slice(events, func(i, j int) bool {
+		return events[i][0] < events[j][0]
+	})
+	memo := make(map[string]int)
+	// base recursion
+	var recurse func(int, int) int
+	recurse = func(currIndex, count int) int {
+		// cached max sum event value
+		cacheKey := strconv.Itoa(currIndex) + "-" + strconv.Itoa(count)
+		if val, found := memo[cacheKey]; found {
+			return val
+		}
+		// main base case for finishing the array or reaching the limit
+		if count == 2 || currIndex >= len(events) {
+			return 0
+		}
+		maxSum := 0
+		// skip current event
+		skipCurrent := recurse(currIndex+1, count)
+		// include current
+		includeCurrent := 0
+		// using binary search to shorten the logic and optimizing it and returning the final index
+		nextBestIndex := sort.Search(len(events), func(i int) bool {
+			return events[i][0] > events[currIndex][1]
+		})
+		includeCurrent = recurse(nextBestIndex, count+1) + events[currIndex][2]
+		maxSum = max(includeCurrent, skipCurrent)
+		memo[cacheKey] = maxSum
+		return maxSum
+	}
+
+	return recurse(0, 0)
+}
