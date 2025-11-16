@@ -2556,3 +2556,91 @@ func maxTwoEvents(events [][]int) int {
 
 	return recurse(0, 0)
 }
+
+// using dfs memo to find the maximum earnings for the taxi distance covered
+func maxTaxiEarnings(n int, rides [][]int) int64 {
+	// sorting the array based on starting time
+	sort.Slice(rides, func(i, j int) bool {
+		return rides[i][0] < rides[j][0]
+	})
+	memo := make(map[int]int64)
+
+	var recurse func(int) int64
+	recurse = func(currIndex int) int64 {
+		// maxed cache path
+		key := currIndex
+		if val, found := memo[key]; found {
+			return val
+		}
+		if currIndex >= len(rides) {
+			return 0
+		}
+		maxRidePoints := int64((rides[currIndex][1] - rides[currIndex][0]) + rides[currIndex][2])
+		// skip
+		skipCurrent := recurse(currIndex + 1)
+		// include current ride ... dont forget to offset the index
+		offSet := currIndex + 1
+		nextBestIndex := sort.Search(len(rides)-offSet, func(i int) bool {
+			actualIndex := i + offSet // forcing the index to appear after the current one so there are no overlaps
+			return rides[actualIndex][0] >= rides[currIndex][1]
+		})
+		actualIndex := offSet + nextBestIndex // need to return the next best offset index
+		includeCurrent := recurse(actualIndex) + int64((rides[currIndex][1]-rides[currIndex][0])+rides[currIndex][2])
+
+		maxRidePoints = max(skipCurrent, includeCurrent)
+		memo[key] = maxRidePoints
+		return maxRidePoints
+	}
+
+	return recurse(0)
+
+}
+
+// max operations to check three ways of pair sum whether its possible or not
+// remmeber its about deleting elements
+func maxOperations(nums []int) int {
+	memo := make(map[string]int)
+	n := len(nums)
+	maxOperations := 0
+	var recurse func(int, int, int) int
+	recurse = func(left, right, targetScore int) int {
+		cacheKey := strconv.Itoa(left) + "-" + strconv.Itoa(right) + "-" + strconv.Itoa(targetScore)
+		if val, found := memo[cacheKey]; found {
+			return val
+		}
+		if left >= right {
+			return 0
+		}
+		maxLocalOperation := 0
+		// calls
+		recurseOne := 0
+		recurseTwo := 0
+		recurseThree := 0
+		// first two elements
+		if nums[left]+nums[left+1] == targetScore {
+			recurseOne = 1 + recurse(left+2, right, targetScore)
+		}
+		if nums[left]+nums[right] == targetScore {
+			recurseTwo = 1 + recurse(left+1, right-1, targetScore)
+		}
+		if nums[right]+nums[right-1] == targetScore {
+			recurseThree = 1 + recurse(left, right-2, targetScore)
+		}
+		maxLocalOperation = max(recurseOne, recurseTwo, recurseThree)
+		memo[cacheKey] = maxLocalOperation
+		return maxLocalOperation
+	}
+
+	// first two elements skip
+	targetScore := nums[0] + nums[1]
+	maxOperationsOne := 1 + recurse(2, n-1, targetScore)
+	// first and last element skip
+	targetScore = nums[0] + nums[n-1]
+	maxOperationsTwo := 1 + recurse(1, n-2, targetScore)
+	// last two elements skip
+	targetScore = nums[n-1] + nums[n-2]
+	maxOperationsThree := 1 + recurse(0, n-3, targetScore)
+
+	maxOperations = max(maxOperationsOne, maxOperationsTwo, maxOperationsThree)
+	return maxOperations
+}
