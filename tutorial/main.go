@@ -2644,3 +2644,123 @@ func maxOperations(nums []int) int {
 	maxOperations = max(maxOperationsOne, maxOperationsTwo, maxOperationsThree)
 	return maxOperations
 }
+
+// longest palindromic subsequence -> primary goal is to return the length of the sequence
+func longestPalindromicSubsequence(s string, k int) int {
+	n := len(s)
+	memo := make([][][]int, n)
+	for i := range memo {
+		memo[i] = make([][]int, n)
+		for j := range memo[i] {
+			memo[i][j] = make([]int, k+1)
+			for kk := range memo[i][j] {
+				memo[i][j][kk] = -1 // -1 means not computed
+			}
+		}
+	}
+
+	abs := func(x int) int {
+		if x < 0 {
+			return -x // to counter act the negative into positive
+		}
+		return x
+	}
+	// calculates distance between characters
+	minDist := func(c1, c2 byte) int {
+		diff := abs(int(c1) - int(c2))
+		return min(diff, 26-diff)
+	}
+	// main dfs function
+	var recurse func(int, int, int) int
+	recurse = func(left, right, operationRemaining int) int {
+		// returning local max subsequence length
+		if memo[left][right][operationRemaining] != -1 {
+			return memo[left][right][operationRemaining]
+		}
+		// base cases
+		if left > right {
+			return 0
+		}
+		if left == right {
+			return 1
+		}
+		// declaring the local maximum to check for max subsequence that is a palindrome
+		localMaxLength := 0
+		// main recursive calls when on the current character
+		equalCharRecurse := 0
+		nonEqualCharRecurse := 0
+
+		if s[left] == s[right] {
+			equalCharRecurse = 2 + recurse(left+1, right-1, operationRemaining)
+		} else {
+			minCostDistance := minDist(s[left], s[right])
+			if minCostDistance <= operationRemaining { // only check the recursion if it falls under the condition
+				nonEqualCharRecurse = 2 + recurse(left+1, right-1, operationRemaining-minCostDistance)
+			}
+		}
+		// skip logics -> either skip from the front or the end
+		skipLeftChar := recurse(left+1, right, operationRemaining)
+		skipRightChar := recurse(left, right-1, operationRemaining)
+
+		localMaxLength = max(skipLeftChar, skipRightChar, equalCharRecurse, nonEqualCharRecurse)
+		memo[left][right][operationRemaining] = localMaxLength
+		return localMaxLength
+	}
+
+	return recurse(0, n-1, k)
+}
+
+// getting overtyped solution
+func possibleStringCount(word string, k int) int {
+	groups := []int{}
+	memo := make(map[[2]int]int)
+	MOD := int(1e9 + 7) // to offset the exceeding lengths and values
+
+	// populating groups with occurence
+	i := 0
+	for i < len(word) {
+		j := i
+		for j < len(word) && word[i] == word[j] {
+			j += 1
+		}
+		groups = append(groups, j-i)
+		i = j
+	}
+
+	var recurse func(int, int) int
+	recurse = func(groupIndex, currLen int) int {
+		// main base case
+		if groupIndex >= len(groups) {
+			if currLen >= k {
+				return 1
+			}
+			return 0
+		}
+
+		// main optimization
+		if currLen >= k {
+			result := 1
+			for keep := groupIndex; keep < len(groups); keep++ {
+				result = (result * groups[keep]) % MOD
+			}
+			return result
+		}
+		// cached value
+		key := [2]int{groupIndex, currLen}
+		if val, found := memo[key]; found {
+			return val
+		}
+
+		ways := 0
+		// main dfs recursive function call to calculate all the ways
+		groupSize := groups[groupIndex]
+		for keep := 1; keep <= groupSize; keep += 1 {
+			ways = (ways + recurse(groupIndex+1, currLen+keep)) % MOD
+		}
+
+		memo[key] = ways
+		return ways
+	}
+
+	return recurse(0, 0)
+}
