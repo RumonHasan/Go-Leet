@@ -2764,3 +2764,63 @@ func possibleStringCount(word string, k int) int {
 
 	return recurse(0, 0)
 }
+
+// tallest billboard
+func tallestBillboard(rods []int) int {
+	memo := make(map[[2]int]int)
+
+	var recurse func(int, int) int
+	recurse = func(currIndex, currDiff int) int {
+		// main base case
+		if currIndex == len(rods) {
+			if currDiff == 0 {
+				return 0
+			}
+			return -(1 << 30)
+		}
+		// cached max
+		key := [2]int{currIndex, currDiff}
+		if val, found := memo[key]; found {
+			return val
+		}
+
+		currMaxDim := 0
+		skipCurrent := recurse(currIndex+1, currDiff)
+		// add for left
+		includeLeft := rods[currIndex] + recurse(currIndex+1, currDiff+rods[currIndex])
+		includeRight := recurse(currIndex+1, currDiff-rods[currIndex]) // no need to add because ur reducing it here
+		currMaxDim = max(includeLeft, includeRight, skipCurrent)
+		memo[key] = currMaxDim
+		return currMaxDim
+	}
+
+	return recurse(0, 0)
+}
+
+func predictTheWinner(nums []int) bool {
+	cache := make(map[[2]int]int)
+	var dfs func(int, int) int
+	dfs = func(left, right int) int {
+		// main base case since if its equal it will return only one of the numbers
+		if left >= right {
+			return nums[left]
+		}
+		// max cache
+		key := [2]int{left, right}
+		if val, found := cache[key]; found {
+			return val
+		}
+
+		pickLeft := nums[left] - dfs(left+1, right)
+		pickRight := nums[right] - dfs(left, right-1)
+
+		return max(pickLeft, pickRight)
+	}
+	currWinner := dfs(0, len(nums)-1)
+	// for winner checking
+	if currWinner >= 0 {
+		return true
+	} else {
+		return false
+	}
+}
