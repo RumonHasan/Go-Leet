@@ -2824,3 +2824,88 @@ func predictTheWinner(nums []int) bool {
 		return false
 	}
 }
+
+// stone game
+func stoneGameII(piles []int) int {
+	cache := make(map[[2]int]int)
+
+	var recurse func(int, int) int
+	recurse = func(currIndex, currM int) int {
+		// cached value
+		key := [2]int{currIndex, currM}
+		if val, found := cache[key]; found {
+			return val
+		}
+
+		if currIndex >= len(piles) {
+			return 0 // nothing else can be taken
+		}
+
+		maxPileSum := 0
+
+		for take := 1; take <= 2*currM; take++ {
+			totalRemaining := 0
+			// accesing all the piles within the range index
+			for i := currIndex; i < len(piles); i++ {
+				totalRemaining += piles[i]
+			}
+			opponentsTotal := recurse(take+currIndex, max(currM, take))
+			myTotal := totalRemaining - opponentsTotal
+
+			maxPileSum = max(maxPileSum, myTotal)
+		}
+		cache[key] = maxPileSum
+		return maxPileSum
+	}
+
+	return recurse(0, 1) // M should be atleast one for 2*M value
+}
+
+// count all the routes
+func countRoutes(locations []int, start int, finish int, fuel int) int {
+	MOD := int(1e9 + 7)
+	memo := make(map[[2]int]int)
+
+	abs := func(num int) int {
+		if num < 0 {
+			return -num
+		}
+		return num
+	}
+
+	var recurse func(int, int) int
+	recurse = func(currCity, remainingFuel int) int {
+		// returning caches max
+		key := [2]int{currCity, remainingFuel}
+		if keyVal, found := memo[key]; found {
+			return keyVal
+		}
+		currentCount := 0
+
+		if currCity >= len(locations) {
+			return 0
+		}
+		if currCity == finish {
+			currentCount = 1
+		}
+
+		// going through all the cities
+		for nextCity := 0; nextCity < len(locations); nextCity++ {
+			if currCity == nextCity { // cannot be at the same city
+				continue
+			}
+			nextCityVal := locations[nextCity]
+			fuelCost := abs(nextCityVal - locations[currCity])
+
+			if fuelCost <= remainingFuel {
+				// index should be passed here
+				currentCount = (currentCount + recurse(nextCity, remainingFuel-fuelCost)) % MOD
+			}
+		}
+
+		memo[key] = currentCount
+		return currentCount
+	}
+
+	return recurse(start, fuel)
+}
