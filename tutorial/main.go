@@ -2909,3 +2909,38 @@ func countRoutes(locations []int, start int, finish int, fuel int) int {
 
 	return recurse(start, fuel)
 }
+
+// out of boundary
+func findPaths(m int, n int, maxMove int, startRow int, startColumn int) int {
+	memo := make(map[[3]int]int)
+	MOD := int(1e9 + 7)
+	var recurse func(int, int, int) int
+	recurse = func(currRow, currCol, movesLeft int) int {
+		// max cached value based on currRow and currCol... default matrix structure caching
+		key := [3]int{currRow, currCol, movesLeft}
+		if val, found := memo[key]; found {
+			return val
+		}
+		// base case -> valid out of bounds return 1
+		if currRow >= m || currCol >= n || currCol < 0 || currRow < 0 {
+			return 1
+		}
+		if movesLeft == 0 { // no more moves left to reduce and continue the recursive chain
+			return 0
+		}
+
+		currCount := 0
+		directions := [][2]int{{0, 1}, {0, -1}, {1, 0}, {-1, 0}}
+
+		// traversing in all four directions
+		for _, dir := range directions {
+			newRow, newCol := dir[0], dir[1]
+			currCount = (currCount + recurse(currRow+newRow, currCol+newCol, movesLeft-1)) % MOD
+		}
+
+		memo[key] = currCount
+		return currCount
+	}
+
+	return recurse(startRow, startColumn, maxMove) // main base start of the dfs structure
+}
