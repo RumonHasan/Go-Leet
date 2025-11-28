@@ -2944,3 +2944,53 @@ func findPaths(m int, n int, maxMove int, startRow int, startColumn int) int {
 
 	return recurse(startRow, startColumn, maxMove) // main base start of the dfs structure
 }
+
+// finding the maximum spells that can be added
+func maximumTotalDamage(power []int) int64 {
+	freqMap := make(map[int]int)
+	for _, currPower := range power {
+		if val, found := freqMap[currPower]; found {
+			freqMap[currPower] = val + 1
+		} else {
+			freqMap[currPower] = 1
+		}
+	}
+	// for sorting it should use the current damage value
+	uniqueDamageArray := []int{}
+	for power, _ := range freqMap {
+		uniqueDamageArray = append(uniqueDamageArray, power)
+	}
+	sort.Slice(uniqueDamageArray, func(i, j int) bool {
+		return uniqueDamageArray[i] < uniqueDamageArray[j]
+	})
+	// sorting powers
+	memo := make(map[int]int64) // key value
+
+	var recurse func(int) int64
+	recurse = func(currIndex int) int64 {
+
+		key := currIndex
+		if val, found := memo[key]; found {
+			return val
+		}
+		// main base case to stop it
+		if currIndex >= len(uniqueDamageArray) {
+			return 0
+		}
+		currDamageRate := uniqueDamageArray[currIndex]
+		totalDamageRate := uniqueDamageArray[currIndex] * freqMap[uniqueDamageArray[currIndex]] // gets the frequency
+
+		skipCurrentSpell := recurse(currIndex + 1)
+
+		nextBestIndex := sort.Search(len(uniqueDamageArray), func(i int) bool { // automatically will speak repeated numbers
+			return uniqueDamageArray[i] > currDamageRate+2
+		})
+
+		takeCurrentSpell := totalDamageRate + int(recurse(nextBestIndex))
+		maxDamage := max(int64(takeCurrentSpell), skipCurrentSpell)
+		memo[key] = maxDamage
+		return maxDamage
+	}
+
+	return recurse(0)
+}
