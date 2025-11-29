@@ -2994,3 +2994,50 @@ func maximumTotalDamage(power []int) int64 {
 
 	return recurse(0)
 }
+
+// goal is to reach the last index.. positions initially from 0 hence need to have a inside for loop to check all combination from start
+func maximumJumps(nums []int, target int) int {
+	memo := make(map[int]int)
+	n := len(nums) - 1
+
+	abs := func(num int) int {
+		if num < 0 {
+			return -num
+		}
+		return num
+	}
+	var recurse func(int) int
+	recurse = func(currIndex int) int {
+		key := currIndex
+		if val, found := memo[key]; found {
+			return val
+		}
+		// primary base case
+		if currIndex == n {
+			return 0
+		}
+		// if the value crosses the boundary of the total
+		if currIndex >= n {
+			return math.MinInt32
+		}
+		maxWays := -1
+		currValue := nums[currIndex]
+		// traversing all paths from 0
+		for index := currIndex + 1; index <= n; index++ {
+			nextValue := nums[index]
+			if abs(nextValue-currValue) <= target {
+				currRecursiveResult := recurse(index)
+				if currRecursiveResult != -1 { // check is needed since -1 will lead to nowhere
+					maxWays = max(maxWays, currRecursiveResult+1)
+				}
+			}
+		}
+		memo[key] = maxWays
+		return maxWays
+	}
+	maxWays := recurse(0)
+	if maxWays == 0 {
+		return -1
+	}
+	return maxWays
+}
