@@ -3041,3 +3041,59 @@ func maximumJumps(nums []int, target int) int {
 	}
 	return maxWays
 }
+
+// using dfs memo to find all the proper slots and minimize the distance
+func minimumTotalDistance(robot []int, factory [][]int) int64 {
+	memo := make(map[[2]int]int)
+	abs := func(num int) int {
+		if num < 0 {
+			return -num
+		}
+		return num
+	}
+	// sorting and populating based on positions of factories and robots
+	sort.Slice(robot, func(i, j int) bool {
+		return robot[i] < robot[j]
+	})
+	slots := []int{}
+	// populating slots for insertion
+	for _, factoryVal := range factory {
+		position, limit := factoryVal[0], factoryVal[1]
+		for index := 0; index < limit; index++ {
+			slots = append(slots, position)
+		}
+	}
+	sort.Slice(slots, func(i, j int) bool {
+		return slots[i] < slots[j]
+	})
+	// main recursive function to check for factory positioning
+	var recurse func(int, int) int
+	recurse = func(robotIndex, slotIndex int) int {
+		// memoized min value for positions
+		key := [2]int{robotIndex, slotIndex}
+		if val, found := memo[key]; found {
+			return val
+		}
+		if robotIndex >= len(robot) {
+			return 0
+		}
+		if slotIndex >= len(slots) {
+			return math.MaxInt64
+		}
+		minPlacements := math.MaxInt64
+
+		skipCurrent := recurse(robotIndex, slotIndex+1) // keep the robot but dont place it in the current slot index
+
+		currDistanceFromSlot := abs(robot[robotIndex] - slots[slotIndex])
+		includeCurrent := recurse(robotIndex+1, slotIndex+1)
+		if includeCurrent != math.MaxInt64 {
+			includeCurrent += currDistanceFromSlot
+		}
+
+		minPlacements = min(skipCurrent, includeCurrent)
+		memo[key] = minPlacements
+		return minPlacements
+	}
+
+	return int64(recurse(0, 0))
+}
