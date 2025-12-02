@@ -3097,3 +3097,47 @@ func minimumTotalDistance(robot []int, factory [][]int) int64 {
 
 	return int64(recurse(0, 0))
 }
+
+// 0,1 Knapsack style problem to reach the target
+func waysToReachTarget(target int, types [][]int) int {
+	cache := make(map[[2]int]int)
+	MOD := int(1e9 + 7)
+	var recurse func(int, int) int
+	recurse = func(currIndex, remainingPoints int) int {
+		// getting the total number of cached ways of reaching the target
+		key := [2]int{currIndex, remainingPoints}
+		if val, found := cache[key]; found {
+			return val
+		}
+		// main base conditions
+		if currIndex >= len(types) {
+			if remainingPoints == 0 {
+				return 1
+			}
+			return 0
+		}
+		if remainingPoints == 0 {
+			return 1
+		}
+		if remainingPoints < 0 {
+			return 0
+		}
+
+		totalWays := 0
+		currPerScore := types[currIndex][1]
+		targetCount := types[currIndex][0]
+		// checking for every count
+		for count := 0; count <= targetCount; count++ {
+			currScore := currPerScore * count
+			// does not have enough points to
+			if currScore <= remainingPoints {
+				totalWays = (totalWays + recurse(currIndex+1, remainingPoints-currScore)) % MOD
+			}
+		}
+
+		cache[key] = totalWays
+		return totalWays
+	}
+
+	return recurse(0, target) // if the remaining points hit 0 that is a valid path
+}
