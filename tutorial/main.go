@@ -3141,3 +3141,106 @@ func waysToReachTarget(target int, types [][]int) int {
 
 	return recurse(0, target) // if the remaining points hit 0 that is a valid path
 }
+
+// finding the best ways to divide the corridors accurately -- FLAWD logic
+func numberOfWaysCorridor(corridor string) int {
+	memo := make(map[[2]int]int)
+	MOD := int(1e9 + 7)
+	currAvailableSeats := 0
+
+	for _, val := range corridor {
+		if val == 'S' {
+			currAvailableSeats++
+		}
+	}
+	if currAvailableSeats == 0 || currAvailableSeats%2 != 0 {
+		return 0
+	}
+	// will return the total number of ways
+	var recurse func(int, int) int
+	recurse = func(currIndex, seatsInSection int) int {
+		// cached ways for seats in section
+		key := [2]int{currIndex, seatsInSection}
+		if val, found := memo[key]; found {
+			return val
+		}
+		// main base case
+		if currIndex >= len(corridor) {
+			if seatsInSection == 0 || seatsInSection == 2 { // check for 2 because if its the last row and 0 for reset
+				return 1
+			}
+			return 0
+		}
+
+		totalDividingWays := 0
+		currPosition := corridor[currIndex]
+		applyDivide := 0
+		keepSeats := 0
+
+		if currPosition == 'S' {
+			if seatsInSection+1 > 2 {
+				return 0
+			}
+			totalDividingWays = recurse(currIndex+1, seatsInSection+1) % MOD // since its a seat it will increment the seat
+		}
+		// skip or current approach will be applied
+		if currPosition == 'P' {
+			if seatsInSection == 2 {
+				// only two conditions that are part of the seat count
+				applyDivide = recurse(currIndex+1, 0) % MOD
+				keepSeats = recurse(currIndex+1, seatsInSection) % MOD
+				totalDividingWays = (applyDivide + keepSeats) % MOD
+			} else {
+				totalDividingWays = recurse(currIndex+1, seatsInSection) % MOD // skip this plant and apply divide later
+			}
+		}
+		memo[key] = totalDividingWays
+		return totalDividingWays
+
+	}
+
+	return recurse(0, 0)
+}
+
+// getting the minimum number of ways to match target
+func minValidStrings(words []string, target string) int {
+	memo := make(map[int]int)
+	// main recursive function to check through each word
+	var recurse func(int) int
+	recurse = func(currIndex int) int {
+		key := currIndex
+		if val, found := memo[key]; found {
+			return val
+		}
+		if currIndex >= len(target) { // no more ways found since min ways reached
+			return 0
+		}
+		// each valid prefix that matches the target word is a valid path
+		minWays := math.MaxInt32
+		// checking for all possible prefixes
+		for _, word := range words {
+			for length := 1; length <= min(len(word), len(target)-currIndex); length++ {
+				// if the prefix matches the target prefix then we continue from there
+				checkValid := len(target) >= currIndex+length
+				if checkValid {
+					checkMatch := word[0:length] == target[currIndex:currIndex+length]
+					if !checkMatch {
+						break
+					}
+					if checkMatch {
+						minWays = min(minWays, 1+recurse(currIndex+length))
+					}
+				}
+
+			}
+		}
+		memo[key] = minWays
+		return minWays
+	}
+
+	minWays := recurse(0)
+	if minWays == math.MaxInt32 {
+		return -1
+	}
+	return minWays
+}
