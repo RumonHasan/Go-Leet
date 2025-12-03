@@ -3244,3 +3244,32 @@ func minValidStrings(words []string, target string) int {
 	}
 	return minWays
 }
+
+// climbing stairs II
+func climbStairs(n int, costs []int) int {
+	memo := make(map[int]int)
+
+	var dfs func(int) int
+	dfs = func(index int) int {
+		key := index
+		if val, found := memo[key]; found {
+			return val
+		}
+		if index == n {
+			return 0
+		}
+		minTotalCost := math.MaxInt32
+
+		// jump indices
+		for jump := 1; jump < 4; jump++ {
+			next_step := index + jump
+			if next_step <= n {
+				minTotalCost = min(minTotalCost, costs[next_step-1]+jump*jump+dfs(next_step))
+			}
+		}
+		memo[key] = minTotalCost
+		return minTotalCost
+	}
+
+	return dfs(0)
+}
