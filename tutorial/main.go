@@ -3273,3 +3273,96 @@ func climbStairs(n int, costs []int) int {
 
 	return dfs(0)
 }
+
+// longest ideal string subsequence
+func longestIdealString(s string, k int) int {
+	memo := make(map[[2]int]int)
+
+	abs := func(num int) int {
+		if num < 0 {
+			return -num
+		}
+		return num
+	}
+
+	var recurse func(int, byte) int
+	recurse = func(currIndex int, last_char byte) int {
+
+		key := [2]int{currIndex, int(last_char)}
+		if val, found := memo[key]; found {
+			return val
+		}
+
+		if currIndex >= len(s) {
+			return 0
+		}
+		maxLen := 0
+
+		skipCurrent := recurse(currIndex+1, last_char)
+		includeCurrent := 0
+		diff := abs(int(s[currIndex]) - int(last_char))
+
+		if last_char == 0 || diff <= k {
+			includeCurrent = 1 + recurse(currIndex+1, s[currIndex])
+		}
+
+		maxLen = max(skipCurrent, includeCurrent)
+		memo[key] = maxLen
+		return maxLen
+	}
+
+	return recurse(0, 0)
+}
+
+// HARD - getting strictly increasing arrays after replacing elements from arr2 to arr1
+func makeArrayIncreasing(arr1 []int, arr2 []int) int {
+	memo := make(map[[2]int]int)
+	// sorting the arr 2 for easier extraction
+	sort.Slice(arr2, func(i, j int) bool {
+		return arr2[i] < arr2[j]
+	})
+	// removing duplicates from arr2
+	unique := []int{}
+	for index, value := range arr2 {
+		if index == 0 || arr2[index-1] != value {
+			unique = append(unique, arr2[index])
+		}
+	}
+	arr2 = unique
+
+	var recurse func(int, int) int
+	recurse = func(index, prevValue int) int {
+		// cached max value ¥
+		key := [2]int{index, prevValue}
+		if val, found := memo[key]; found {
+			return val
+		}
+		// base case
+		if index >= len(arr1) {
+			return 0
+		}
+		increaseSequence := math.MaxInt32
+		notIncreasingSequence := math.MaxInt32
+
+		if arr1[index] > prevValue {
+			increaseSequence = recurse(index+1, arr1[index]) // updating the previous value if the sequence is correct
+		}
+		// replacement should be allowed for both conditions because this might lead to better sequences
+		closestValueIndex := sort.Search(len(arr2), func(i int) bool {
+			return arr2[i] > prevValue
+		})
+		if closestValueIndex < len(arr2) {
+			notIncreasingSequence = 1 + recurse(index+1, arr2[closestValueIndex])
+		}
+
+		minWays := min(notIncreasingSequence, increaseSequence)
+		memo[key] = minWays
+		return minWays
+	}
+
+	minWays := recurse(0, math.MinInt32)
+	if minWays == math.MaxInt32 {
+		return -1
+	}
+	return minWays
+}
