@@ -3366,3 +3366,43 @@ func makeArrayIncreasing(arr1 []int, arr2 []int) int {
 	}
 	return minWays
 }
+
+// rotating for minimum distance
+func findRotateSteps(ring string, key string) int {
+	// populating the index array with character
+	ringMap := make(map[byte][]int)
+	for index, character := range ring {
+		ringMap[byte(character)] = append(ringMap[byte(character)], index)
+	}
+	memo := make(map[[2]int]int) // caching for memo
+	abs := func(num int) int {
+		if num < 0 {
+			return -num
+		}
+		return num
+	}
+	var recurse func(int, int) int
+	recurse = func(ringIndex, keyIndex int) int {
+		// key index for storing
+		keyMemo := [2]int{ringIndex, keyIndex}
+		if val, found := memo[keyMemo]; found {
+			return val
+		}
+		// base case
+		if len(key) == keyIndex {
+			return 0
+		}
+		minCost := math.MaxInt32
+		for _, targetIndex := range ringMap[byte(key[keyIndex])] {
+			clockwiseDistance := abs(ringIndex - targetIndex)
+			antiClockwise := len(ring) - clockwiseDistance
+			localCost := 1 + recurse(targetIndex, keyIndex+1) + min(antiClockwise, clockwiseDistance)
+			minCost = min(localCost, minCost)
+		}
+		memo[keyMemo] = minCost
+		return minCost
+
+	}
+
+	return recurse(0, 0) // returning the minimum path
+}
