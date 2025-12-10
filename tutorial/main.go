@@ -3406,3 +3406,41 @@ func findRotateSteps(ring string, key string) int {
 
 	return recurse(0, 0) // returning the minimum path
 }
+
+func minHeightShelves(books [][]int, shelfWidth int) int {
+	memo := make(map[int]int)
+
+	var recurse func(int) int
+	recurse = func(currIndex int) int {
+
+		key := currIndex
+		if val, found := memo[key]; found {
+			return val
+		}
+		if currIndex >= len(books) {
+			return 0
+		}
+		minShelfHeight := math.MaxInt32
+		currShelfWidth := 0
+		currShelfHeight := 0
+
+		// recursing through all the shelf for maximum width and height efficiency
+		for index := currIndex; index < len(books); index++ {
+			currThickNess := books[index][0]
+			currHeight := books[index][1]
+			currShelfWidth += currThickNess
+			// break the recursive chain if the current shelf width increases more the count shelf width
+			if currShelfWidth > shelfWidth {
+				break
+			}
+			currShelfHeight = max(currShelfHeight, currHeight)
+			recursedHeightVal := recurse(index+1) + currShelfHeight
+			minShelfHeight = min(recursedHeightVal, minShelfHeight)
+
+		}
+		memo[key] = minShelfHeight
+		return minShelfHeight
+	}
+
+	return recurse(0)
+}
