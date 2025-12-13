@@ -3444,3 +3444,74 @@ func minHeightShelves(books [][]int, shelfWidth int) int {
 
 	return recurse(0)
 }
+
+// minimum grid moves
+func minimumMovesGrid(grid [][]int) int {
+	memo := make(map[string]int)
+	// abs value
+	abs := func(num int) int {
+		if num < 0 {
+			return -num
+		}
+		return num
+	}
+	// distance calculation for empty and excess array matrix for index traversal
+	distanceCalc := func(distanceOne []int, distanceTwo []int) int {
+		x1, y1 := distanceOne[0], distanceOne[1]
+		x2, y2 := distanceTwo[0], distanceTwo[1]
+		return abs(x1-x2) + abs(y1-y2)
+	}
+	// populate exceed and 0 locations
+	excess := [][]int{}
+	empty := [][]int{}
+	used := []bool{}
+
+	// excess = means more than 1 and empty which is 0
+	for i := 0; i < len(grid); i++ {
+		for j := 0; j < len(grid[i]); j++ {
+			currVal := grid[i][j]
+			if currVal > 1 {
+				// 1 remains in the cell
+				for sub := 0; sub < currVal-1; sub++ {
+					excess = append(excess, []int{i, j})
+				}
+			}
+			if currVal == 0 {
+				empty = append(empty, []int{i, j})
+			}
+		}
+	}
+	// After the loops
+	used = make([]bool, len(excess))
+
+	// main recursive functionality
+	var recurse func(int, []bool) int
+	recurse = func(emptyIndex int, used []bool) int {
+		// memoized min
+		key := fmt.Sprintf("%d-%v", emptyIndex, used)
+		if val, found := memo[key]; found {
+			return val
+		}
+		if emptyIndex >= len(empty) {
+			return 0
+		}
+
+		minMoves := math.MaxInt32
+		currentEmptyIndexVal := empty[emptyIndex]
+		// for loop recursion step ... every step for index recursion needs to be checked
+		for index, val := range excess {
+			currDistance := distanceCalc(val, currentEmptyIndexVal)
+			if !used[index] { // if its not in the used set then get the new value
+				used[index] = true
+				newValue := currDistance + recurse(emptyIndex+1, used)
+				minMoves = min(newValue, minMoves)
+				used[index] = false // for backtracking
+			}
+
+		}
+		memo[key] = minMoves
+		return minMoves
+	}
+
+	return recurse(0, used)
+}
