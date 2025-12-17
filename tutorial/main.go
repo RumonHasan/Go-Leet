@@ -3598,3 +3598,38 @@ func strangePrinter(s string) int {
 	minTurns := recurse(0, n-1)
 	return minTurns
 }
+
+// buy and sell stock while the transaction is k remaining
+func maxProfit(k int, prices []int) int {
+	memo := make(map[[3]int]int) // holding will be used as 0 and 1
+
+	var recurse func(int, int, int) int
+	recurse = func(day, k, holding int) int {
+		// memoized max profit
+		key := [3]int{day, k, holding}
+		if val, found := memo[key]; found {
+			return val
+		}
+		// no more calculations if day is completed and k == 0
+		if day >= len(prices) || k == 0 {
+			return 0
+		}
+		maxProfit := 0
+
+		if holding == 0 {
+			// choose to buy or not to buy
+			buy := -prices[day] + recurse(day+1, k, 1)
+			dontBuy := recurse(day+1, k, holding) // keep the same
+			maxProfit = max(buy, dontBuy)
+
+		} else if holding == 1 {
+			sell := prices[day] + recurse(day+1, k-1, 0)
+			dontSell := recurse(day+1, k, holding)
+			maxProfit = max(sell, dontSell)
+		}
+		memo[key] = maxProfit
+		return maxProfit
+	}
+
+	return recurse(0, k, 0)
+}
