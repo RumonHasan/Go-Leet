@@ -3515,3 +3515,86 @@ func minimumMovesGrid(grid [][]int) int {
 
 	return recurse(0, used)
 }
+
+// finding the most quiet among the pool of rich people
+// wrong
+func loudAndRich(richer [][]int, quiet []int) []int {
+	n := len(quiet)
+	quietest := make([]int, n)
+	for index := 0; index < len(quietest); index++ {
+		quietest[index] = -1
+	}
+	graph := make(map[int][]int)
+	// making the graph to show a has more money than b
+	for _, pair := range richer {
+		a, b := pair[0], pair[1]
+		graph[b] = append(graph[b], a)
+	}
+	// main recursive function to calculate
+	var recurse func(int) int
+	recurse = func(personId int) int {
+		// if there is no value then return the quietest right then and there
+		if quietest[personId] != -1 {
+			return quietest[personId]
+		}
+		quietPerson := personId
+		currQuitestPersonRicher := graph[quietPerson]
+		currQuitestPersonValue := quiet[quietPerson]
+
+		// looping through to check and update the quietest person
+		for _, currRicherPerson := range currQuitestPersonRicher {
+			currQuietestPerson := recurse(currRicherPerson)
+			currRicherQuietValue := quiet[currRicherPerson] // currRichPerson quiet value
+			if quiet[currQuietestPerson] > currQuitestPersonValue {
+				currQuitestPersonValue = currRicherQuietValue
+			}
+		}
+		quietest[personId] = currQuitestPersonValue
+		return currQuitestPersonValue
+	}
+
+	// getting the quietest person from each start
+	for i := 0; i < n; i++ {
+		recurse(i)
+	}
+	return quietest
+}
+
+// getting the strangePrinter to print letters and names
+func strangePrinter(s string) int {
+	n := len(s)
+	memo := make(map[[2]int]int)
+
+	var recurse func(int, int) int
+	recurse = func(leftIndex, rightIndex int) int {
+		// returning the memo for fixed minWays
+		key := [2]int{leftIndex, rightIndex}
+		if val, found := memo[key]; found {
+			return val
+		}
+		// valid counting point when both the index are equal
+		if leftIndex == rightIndex {
+			return 1
+		}
+		if leftIndex > rightIndex {
+			return 0
+		}
+		minWays := math.MaxInt32
+
+		if s[leftIndex] == s[rightIndex] {
+			minWays = min(minWays, recurse(leftIndex, rightIndex-1)) // one side iteration is fine because it will be the same result
+		} else {
+			currMinWays := math.MaxInt32
+			for k := leftIndex; k < rightIndex; k++ {
+				currMinWays = min(currMinWays, recurse(leftIndex, k)+recurse(k+1, rightIndex)) // for both sides substring
+			}
+			minWays = min(minWays, currMinWays)
+		}
+
+		memo[key] = minWays
+		return minWays
+	}
+
+	minTurns := recurse(0, n-1)
+	return minTurns
+}
