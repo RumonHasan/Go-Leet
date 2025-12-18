@@ -3633,3 +3633,49 @@ func maxProfit(k int, prices []int) int {
 
 	return recurse(0, k, 0)
 }
+
+// deleting rows while keeping the overall string sorted
+func minDeletionSize(strs []string) int {
+	memo := make(map[[2]int]int)
+	colLen := len(strs[0]) // length of a single string
+	rowLen := len(strs)
+
+	// checking whether current vertical rows are correct or not as soon as a single
+	checkRowValid := func(curr_col, prev_col int) bool {
+		state := true
+		for i := 0; i < rowLen; i++ {
+			if strs[i][curr_col] < strs[i][prev_col] { // if one condition fails then return entirely
+				return false
+			}
+		}
+		return state
+	}
+
+	var recurse func(int, int) int
+	recurse = func(curr_col, prev_col int) int {
+		// memoized cached items for min ways
+		key := [2]int{curr_col, prev_col}
+		if val, found := memo[key]; found {
+			return val
+		}
+		// main base case
+		if curr_col >= colLen {
+			return 0
+		}
+
+		skipCurrCol := recurse(curr_col+1, prev_col) // keeping the prev col intact
+		includeCurrCol := 0
+
+		// include either because it will add the next sequence if the col ascending order is confirmed
+		if prev_col == -1 || checkRowValid(curr_col, prev_col) {
+			includeCurrCol = 1 + recurse(curr_col+1, curr_col)
+		}
+
+		maxKept := max(skipCurrCol, includeCurrCol)
+		memo[key] = maxKept
+		return maxKept
+	}
+
+	maxKept := recurse(0, -1)
+	return colLen - maxKept
+}
