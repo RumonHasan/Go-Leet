@@ -3679,3 +3679,47 @@ func minDeletionSize(strs []string) int {
 	maxKept := recurse(0, -1)
 	return colLen - maxKept
 }
+
+// minimum difficult of the splits that can happen
+func minDifficulty(jobDifficulty []int, d int) int {
+	memo := make(map[[2]int]int)
+
+	var recurse func(int, int) int
+	recurse = func(currIndex, days_remaining int) int {
+		// cached min ways
+		key := [2]int{currIndex, days_remaining}
+		if val, found := memo[key]; found {
+			return val
+		}
+		minDifficulty := math.MaxInt32
+		// if the days == 1 then return the remaining numbers
+		if days_remaining == 1 {
+			maxDiff := 0
+			for index := currIndex; index < len(jobDifficulty); index++ {
+				maxDiff = max(maxDiff, jobDifficulty[index])
+			}
+			return maxDiff
+		}
+		// no more jobs remaining
+		if currIndex >= len(jobDifficulty) {
+			return 0
+		}
+		// looping through splits while keeping valid splits
+		maxCurrDiffSoFar := 0
+		for end := currIndex; end <= len(jobDifficulty)-days_remaining; end++ {
+			maxCurrDiffSoFar = max(maxCurrDiffSoFar, jobDifficulty[end]) // incremental updates
+			currRecurseRes := recurse(end+1, days_remaining-1)           // returning the max ways from other paths
+			totalWays := maxCurrDiffSoFar + currRecurseRes
+			minDifficulty = min(totalWays, minDifficulty)
+		}
+		memo[key] = minDifficulty
+		return minDifficulty
+	}
+
+	minWays := recurse(0, d)
+	// max check
+	if minWays == math.MaxInt32 {
+		return -1
+	}
+	return minWays
+}
