@@ -3723,3 +3723,48 @@ func minDifficulty(jobDifficulty []int, d int) int {
 	}
 	return minWays
 }
+
+// minimum time required for all assigned workers
+func minimumTimeRequired(jobs []int, k int) int {
+	workers := make([]int, k) // assigned workers based on the rate of k with default 0
+
+	var backtrack func(int, int) int
+	backtrack = func(jobIndex int, currBest int) int {
+		// main base case to return the current maxLoad borne by one of the workers
+		if jobIndex >= len(jobs) {
+			maxLoad := 0
+			for _, load := range workers {
+				maxLoad = max(maxLoad, load)
+			}
+			return maxLoad
+		}
+
+		minWays := math.MaxInt32 // current min ways
+
+		// checking for every worker combinations to populate the workers
+		for index := 0; index < k; index++ {
+			if workers[index] >= minWays {
+				continue
+			}
+			workers[index] += jobs[jobIndex]
+
+			currMaxLoad := 0
+			for _, load := range workers {
+				currMaxLoad = max(load, currMaxLoad)
+			}
+
+			if currMaxLoad < minWays {
+				maxBacktrackedLoad := backtrack(jobIndex+1, minWays)
+				minWays = min(minWays, maxBacktrackedLoad)
+			}
+			// backtracking step
+			workers[index] -= jobs[jobIndex]
+			if workers[index] == 0 {
+				break
+			}
+		}
+		return minWays
+	}
+
+	return backtrack(0, math.MaxInt32)
+}
