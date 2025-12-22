@@ -3768,3 +3768,39 @@ func minimumTimeRequired(jobs []int, k int) int {
 
 	return backtrack(0, math.MaxInt32)
 }
+
+// buying and selling stocks with cool down period right after selling
+func maxProfitCooldown(prices []int) int {
+	memo := make(map[[2]int]int)
+
+	var recurse func(int, int) int
+	recurse = func(currIndex, isHolding int) int {
+		// max cached profit
+		key := [2]int{currIndex, isHolding}
+		if val, found := memo[key]; found {
+			return val
+		}
+		// stock becomes worthless either way since no more days to sell
+		if currIndex >= len(prices) {
+			return 0
+		}
+		maxProfit := 0
+
+		// there is option of holding stock and do nothing and cool down period only activates when selling
+		if isHolding == 0 {
+			buy := -prices[currIndex] + recurse(currIndex+1, 1)
+			holdBuy := recurse(currIndex+1, isHolding)
+			maxProfit = max(holdBuy, buy)
+		} else {
+			sell := +prices[currIndex] + recurse(currIndex+2, 0)
+			holdSell := recurse(currIndex+1, isHolding)
+			maxProfit = max(holdSell, sell)
+		}
+
+		memo[key] = maxProfit
+		return maxProfit
+	}
+
+	// stating isHolding as 0 and 1 for true and false
+	return recurse(0, 0)
+}
