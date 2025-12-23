@@ -3804,3 +3804,40 @@ func maxProfitCooldown(prices []int) int {
 	// stating isHolding as 0 and 1 for true and false
 	return recurse(0, 0)
 }
+
+func splitArray(nums []int, k int) int {
+	memo := make(map[[2]int]int)
+
+	var recurse func(int, int) int
+	recurse = func(array_index, remaining int) int {
+		// memoized min max value
+		key := [2]int{array_index, remaining}
+		if val, found := memo[key]; found {
+			return val
+		}
+		if remaining == 1 { // return the final sum of the partition of the remaining  value is 1 since its last partition
+			currSum := 0
+			for index := array_index; index < len(nums); index++ {
+				currSum += nums[index]
+			}
+			return currSum
+		}
+		minLargestSum := math.MaxInt32
+
+		currSum := 0 // local accumulated sum
+		for index := array_index; index <= len(nums)-remaining; index++ {
+			currSum += nums[index]
+			if currSum >= minLargestSum {
+				break
+			}
+			recursedSum := recurse(index+1, remaining-1)
+			currMaxSum := max(recursedSum, currSum)
+			minLargestSum = min(minLargestSum, currMaxSum)
+		}
+		memo[key] = minLargestSum
+		return minLargestSum
+	}
+
+	minLarge := recurse(0, k)
+	return minLarge
+}
