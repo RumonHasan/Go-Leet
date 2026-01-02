@@ -3841,3 +3841,72 @@ func splitArray(nums []int, k int) int {
 	minLarge := recurse(0, k)
 	return minLarge
 }
+
+// backtracking question
+func getWordsInLongestSubsequence(words []string, groups []int) []string {
+	// Memoization: key is [currIndex, lastIndex+1], value is best subsequence
+	memo := make(map[[2]int][]string)
+
+	canSelect := func(index int, lastIndex int) bool {
+		if lastIndex == -1 {
+			return true
+		}
+
+		if groups[index] == groups[lastIndex] {
+			return false
+		}
+
+		word := words[index]
+		checkWord := words[lastIndex]
+
+		if len(word) != len(checkWord) {
+			return false
+		}
+
+		hammingDistance := 0
+		for i := 0; i < len(word); i++ {
+			if word[i] != checkWord[i] {
+				hammingDistance++
+				if hammingDistance > 1 {
+					return false
+				}
+			}
+		}
+		return hammingDistance == 1
+	}
+
+	var recurse func(int, int) []string
+	recurse = func(currIndex, lastIndex int) []string {
+		// Base case
+		if currIndex >= len(words) {
+			return []string{}
+		}
+
+		// Check memo
+		key := [2]int{currIndex, lastIndex + 1} // +1 to handle -1
+		if val, exists := memo[key]; exists {   // memoization removes the bottle neck of redundant searches
+			return val
+		}
+
+		// Skip current word
+		skip := recurse(currIndex+1, lastIndex)
+
+		// Include current word if valid
+		include := []string{}
+		if canSelect(currIndex, lastIndex) {
+			next := recurse(currIndex+1, currIndex)
+			include = append([]string{words[currIndex]}, next...)
+		}
+
+		// Choose the longer one
+		result := skip
+		if len(include) > len(skip) {
+			result = include
+		}
+
+		memo[key] = result
+		return result
+	}
+
+	return recurse(0, -1)
+}
