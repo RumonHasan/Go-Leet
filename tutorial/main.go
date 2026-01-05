@@ -3910,3 +3910,152 @@ func getWordsInLongestSubsequence(words []string, groups []int) []string {
 
 	return recurse(0, -1)
 }
+
+// cutting wood vertically and horizontally.. goal is to return the maximum cost possible
+func sellingWood(m int, n int, prices [][]int) int64 {
+	memo := make(map[[2]int]int)
+	priceMap := make(map[[2]int]int)
+
+	// populating the price map to return the cost of present cuts directly
+	for _, val := range prices {
+		height, width, price := val[0], val[1], val[2]
+		priceMap[[2]int{height, width}] = price
+	}
+	// main recursive function to cutting and checking through all the maximum pieces through the recursive chain
+	var recurse func(int, int) int
+	recurse = func(height, width int) int {
+		// main base case.. if any of the dims hit 0 then there is no cost incurred
+		if height == 0 || width == 0 {
+			return 0
+		}
+		// memoized maxvalue
+		key := [2]int{height, width}
+		if val, found := memo[key]; found {
+			return val
+		}
+		// will store the current maxPriceValue that will be current if any or 0 if no value present for the current cuts
+		maxPriceValue := priceMap[[2]int{height, width}]
+		// cutting horizontally means cutting the height
+		for i := 1; i < height; i++ {
+			topPiece := recurse(i, width)
+			bottomPiece := recurse(height-i, width)
+			maxPriceValue = max(maxPriceValue, topPiece+bottomPiece)
+		}
+		// cutting vertically means cutting the width
+		for i := 1; i < width; i++ {
+			leftPiece := recurse(height, i)
+			rightPiece := recurse(height, width-i)
+			maxPriceValue = max(maxPriceValue, leftPiece+rightPiece)
+		}
+
+		memo[key] = maxPriceValue // storing the memoized max price value within the memo
+		return maxPriceValue
+	}
+
+	return int64(recurse(m, n)) // passing the original sizes
+}
+
+// minimum coins
+func minimumCoins(prices []int) int {
+	memo := make(map[[2]int]int)
+	// main recursive function
+	var recurse func(int, int) int
+	recurse = func(currIndex, freeLimit int) int {
+		if currIndex >= len(prices) {
+			return 0
+		}
+		// memoized index
+		key := [2]int{currIndex, freeLimit}
+		if val, found := memo[key]; found {
+			return val
+		}
+		minCoins := math.MaxInt32
+
+		if currIndex > freeLimit {
+			minCoins = recurse(currIndex+1, currIndex+currIndex+1) + prices[currIndex]
+		} else {
+			skipCurrent := recurse(currIndex+1, freeLimit)
+			includeCurrent := recurse(currIndex+1, max(freeLimit, currIndex+currIndex+1)) + prices[currIndex]
+			minCoins = min(skipCurrent, includeCurrent)
+		}
+		memo[key] = minCoins
+		return minCoins
+	}
+
+	return recurse(0, -1)
+}
+
+// miniimize the difference of matrix -> row wise movement
+func minimizeTheDifference(mat [][]int, target int) int {
+	memo := make(map[[2]int]int)
+	rowLen := len(mat)
+
+	abs := func(num int) int {
+		if num < 0 {
+			return -num
+		}
+		return num
+	}
+
+	var recurse func(int, int) int
+	recurse = func(rowIndex, currSum int) int {
+		// main base to return the smallest difference
+		if rowIndex == rowLen {
+			return abs(currSum - target)
+		}
+		if currSum > target+5000 {
+			return abs(currSum - target)
+		}
+		// memoized min value
+		key := [2]int{rowIndex, currSum}
+		if val, found := memo[key]; found {
+			return val
+		}
+		currRow := mat[rowIndex]
+		minimumVal := math.MaxInt32
+		// only loop for each horizontal row choices
+		for _, choice := range currRow {
+			currRes := recurse(rowIndex+1, currSum+choice)
+			minimumVal = min(currRes, minimumVal)
+		}
+		memo[key] = minimumVal
+		return minimumVal
+	}
+
+	return recurse(0, 0)
+}
+
+// matrix sum
+func maxMatrixSum(matrix [][]int) int64 {
+
+	abs := func(num int) int {
+		if num < 0 {
+			return -num
+		}
+		return num
+	}
+	negativeCount := 0
+	smallestElement := math.MaxInt32
+	totalSum := 0
+	for i := 0; i < len(matrix); i++ {
+		for j := 0; j < len(matrix[i]); j++ {
+			element := matrix[i][j]
+			if element < 0 {
+				negativeCount++
+			}
+			totalSum += abs(element)
+			smallestElement = min(smallestElement, abs(element))
+		}
+	}
+
+	oddCheck := false
+	if negativeCount%2 == 1 {
+		oddCheck = true
+	}
+
+	if oddCheck {
+		totalSum = totalSum - (2 * smallestElement)
+		return int64(totalSum)
+	}
+	return int64(totalSum)
+}
