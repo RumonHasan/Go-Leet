@@ -4059,3 +4059,44 @@ func maxMatrixSum(matrix [][]int) int64 {
 	}
 	return int64(totalSum)
 }
+
+// minimum cost for splitting array for trimmed importance value
+func minCostSplitImportance(nums []int, k int) int {
+	memo := make(map[int]int)
+
+	var recurse func(int) int
+	recurse = func(currStart int) int {
+		key := currStart
+		if val, found := memo[key]; found {
+			return val
+		}
+		// main base case
+		if currStart >= len(nums) {
+			return 0
+		}
+		minCost := math.MaxInt32
+		freqMap := make(map[int]int)
+		trimLen := 0
+
+		for index := currStart; index < len(nums); index++ {
+			currNum := nums[index]
+			freqMap[currNum]++
+			newOccurence := freqMap[currNum]
+
+			if newOccurence == 2 {
+				trimLen += 2
+			} else if newOccurence > 2 {
+				trimLen++
+			}
+
+			importanceValue := trimLen + k
+			existingRes := recurse(index + 1)
+			minCost = min(minCost, importanceValue+existingRes)
+		}
+		memo[key] = minCost
+		return minCost
+	}
+
+	minCost := recurse(0)
+	return minCost
+}
