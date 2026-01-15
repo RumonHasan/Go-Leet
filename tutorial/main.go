@@ -4100,3 +4100,141 @@ func minCostSplitImportance(nums []int, k int) int {
 	minCost := recurse(0)
 	return minCost
 }
+
+func countStableSubsequences(nums []int) int {
+	const MOD = 1000000007
+	memo := make(map[[3]int]int)
+	n := len(nums)
+
+	var recurse func(int, int, int) int
+	recurse = func(currIndex, lastParity, consequtiveCount int) int {
+		// main base case completed subsequence
+		if currIndex >= n {
+			return 1
+		}
+		currRes := 0
+		// memoized value
+		key := [3]int{currIndex, lastParity, consequtiveCount}
+		if val, found := memo[key]; found {
+			return val
+		}
+
+		currNum := nums[currIndex]
+		canTake := false
+		currParity := currNum % 2
+		newParity := currParity
+		newCount := 0
+
+		// skip current but add to final result
+		currRes += recurse(currIndex+1, lastParity, consequtiveCount)
+
+		if lastParity == -1 {
+			canTake = true
+			newCount = 1
+		} else if currParity != lastParity {
+			canTake = true
+			newCount = 1
+		} else if consequtiveCount < 2 { // means its one
+			canTake = true
+			newCount = 2
+		}
+
+		if canTake {
+			currRes += recurse(currIndex+1, newParity, newCount)
+		}
+		currRes %= MOD
+		memo[key] = currRes
+		return currRes
+	}
+
+	return recurse(0, -1, 0) - 1
+}
+
+// medium level for dfs memoization exploration
+func maxBalancedShipments(weight []int) int {
+	memo := make(map[int]int)
+
+	var recurse func(int) int
+	recurse = func(currIndex int) int {
+		//maximum memoized weight partition count
+		key := currIndex
+		if val, found := memo[key]; found {
+			return val
+		}
+		if currIndex >= len(weight) {
+			return 0
+		}
+		currMaxWeight := weight[currIndex]
+		maxPartitions := recurse(currIndex + 1)
+
+		// including current and getting all partitions
+		for index := currIndex; index < len(weight); index++ {
+			currWeight := weight[index]
+			currMaxWeight = max(currWeight, currMaxWeight)
+
+			if currWeight < currMaxWeight {
+				includeCurrent := 1 + recurse(index+1)
+				maxPartitions = max(includeCurrent, maxPartitions)
+			}
+		}
+
+		memo[key] = maxPartitions
+		return maxPartitions
+	}
+
+	return recurse(0)
+}
+
+// coloring border connected components with dfs
+func colorBorder(grid [][]int, row int, col int, color int) [][]int {
+	visitedCoords := make(map[[2]int]bool)
+	borderCoords := [][2]int{} // will contain the border coords
+	rowLen := len(grid)
+	colLen := len(grid[0])
+	originalColor := grid[row][col]
+
+	var recurse func(int, int)
+	recurse = func(row, col int) {
+		// boundary check
+		if row >= rowLen || col >= colLen || row < 0 || col < 0 || grid[row][col] != originalColor {
+			return
+		}
+		if visitedCoords[[2]int{row, col}] {
+			return
+		}
+		// adding to visited coors
+		visitedCoords[[2]int{row, col}] = true
+		// checking for borders
+		if row == 0 || col == 0 || row == rowLen-1 || col == colLen-1 {
+			borderCoords = append(borderCoords, [2]int{row, col})
+		} else {
+			// checking for atleast one different neighbor
+			currCell := grid[row][col]
+			directions := [][]int{{0, 1}, {0, -1}, {1, 0}, {-1, 0}}
+			for _, dir := range directions {
+				newCol := col + dir[1]
+				newRow := row + dir[0]
+				if currCell != grid[newRow][newCol] {
+					borderCoords = append(borderCoords, [2]int{row, col})
+					break
+				}
+			}
+		}
+
+		// four directional checks
+		recurse(row+1, col)
+		recurse(row, col+1)
+		recurse(row-1, col)
+		recurse(row, col-1)
+
+	}
+	recurse(row, col)
+
+	// coloring the borders
+	for index := 0; index < len(borderCoords); index++ {
+		row, col := borderCoords[index][0], borderCoords[index][1]
+		grid[row][col] = color
+	}
+
+	return grid
+}
