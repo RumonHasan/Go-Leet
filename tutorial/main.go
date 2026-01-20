@@ -4238,3 +4238,114 @@ func colorBorder(grid [][]int, row int, col int, color int) [][]int {
 
 	return grid
 }
+
+// using minimum jumps to reach the target with constraints
+func minimumJumps1654(forbidden []int, a int, b int, x int) int {
+	memo := make(map[[2]int]int)
+	result := 0
+	boolToInt := func(val bool) int {
+		if val {
+			return 1
+		}
+		return 0
+	}
+	//assigning forbidden map
+	maxForbidden := 0
+	forbiddenMap := make(map[int]bool)
+	for _, forbiddenVal := range forbidden {
+		forbiddenMap[forbiddenVal] = true
+		if forbiddenVal > maxForbidden {
+			maxForbidden = forbiddenVal
+		}
+	}
+	upperLimit := 2000 + a + b
+
+	// main recursive function
+	var recurse func(int, bool) int
+	recurse = func(currPosition int, wasBackward bool) int {
+		if currPosition == x { // target has been reached
+			return 0
+		}
+		// main base case ot limit current position
+		if currPosition > upperLimit || forbiddenMap[currPosition] || currPosition < 0 {
+			return math.MaxInt32
+		}
+		// memoized base case for memoized minimum jumps
+		key := [2]int{currPosition, boolToInt(wasBackward)}
+		if val, found := memo[key]; found {
+			return val
+		}
+		// base case for forbidden check
+		minJumps := math.MaxInt32
+
+		// always can move forward
+		forward := recurse(currPosition+a, false)
+		if forward < math.MaxInt32 {
+			totalJumps := forward + 1
+			minJumps = min(minJumps, totalJumps)
+		}
+
+		// only calls if wasBackward is false
+		if !wasBackward {
+			backward := recurse(currPosition-b, true)
+			if backward < math.MaxInt32 {
+				totalJumps := backward + 1
+				minJumps = min(minJumps, totalJumps)
+			}
+		}
+
+		memo[key] = minJumps
+		return minJumps
+	}
+
+	result = recurse(0, false)
+
+	if result == math.MaxInt32 {
+		return -1
+	}
+	return result
+}
+
+// checking number of arithmetic slices and returning all of the subsequence
+func numberOfArithmeticSlices(nums []int) int {
+	memo := make(map[string]int) // memoization for storing maximum subsequence length from starting point
+	result := 0
+
+	// main recursive function -- its already pruned hence I wont need to calculate length
+	var recurse func(int, int, int) int
+	recurse = func(currIndex, lastValue, lastDiff int) int {
+		// main base case to return the length
+		if currIndex == len(nums) {
+			return 0
+		}
+		// memoized return value
+		key := fmt.Sprintf("%d,%d,%d", currIndex, lastValue, lastDiff)
+		if val, found := memo[key]; found {
+			return val
+		}
+
+		// skip current number
+		count := recurse(currIndex+1, lastValue, lastDiff)
+
+		// include current but need to check whether its valid or not based on the currDiff check
+		currDiffRecursiveTree := nums[currIndex] - lastValue
+		if currDiffRecursiveTree == lastDiff {
+			count += 1
+			count += recurse(currIndex+1, nums[currIndex], currDiffRecursiveTree)
+		}
+
+		memo[key] = count
+		return count
+
+	}
+
+	// getting the starting points using a nested loops
+	for i := 0; i < len(nums); i++ {
+		for j := i + 1; j < len(nums); j++ {
+			currDiff := nums[j] - nums[i]
+			result += recurse(j+1, nums[j], currDiff)
+		}
+	}
+
+	return result
+}
