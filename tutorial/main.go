@@ -4349,3 +4349,41 @@ func numberOfArithmeticSlices(nums []int) int {
 
 	return result
 }
+
+// calculating where the ball will fall after its being dropped from the top row
+func findBall(grid [][]int) []int {
+	rowLen := len(grid)
+	colLen := len(grid[0])
+	dropLocation := make([]int, colLen)
+
+	// main dfs function to check all the possibble path when the ball is dropped
+	var recurse func(int, int) int
+	recurse = func(row, col int) int {
+		// if it reaches the last row that means we have an exit point
+		if row == rowLen {
+			return col
+		}
+		nextRow := row + 1 // row will always increment
+		direction := grid[row][col]
+		nextCol := col + direction
+
+		// ball gets stuck
+		if nextCol < 0 || nextCol >= colLen {
+			return -1
+		}
+		nextDirection := grid[row][nextCol] // initialize next direction after checking
+		// vtrap pattern check
+		if direction != nextDirection {
+			return -1
+		}
+		// since the direction decides the nextRow and nextCol we can simply return here
+		return recurse(nextRow, nextCol)
+	}
+
+	// will populate the drop location once the ball drops all the way down
+	for colIndex := 0; colIndex < colLen; colIndex++ {
+		dropLocation[colIndex] = recurse(0, colIndex)
+	}
+
+	return dropLocation
+}
