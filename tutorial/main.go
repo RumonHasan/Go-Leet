@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -4386,4 +4387,74 @@ func findBall(grid [][]int) []int {
 	}
 
 	return dropLocation
+}
+
+// returning string array
+func invalidTransactions(transactions []string) []string {
+	invalid := make([]bool, len(transactions))
+	transactionMap := make(map[string][]int)
+	transactionRes := []string{}
+	// returning absolute value
+	abs := func(num int) int {
+		if num < 0 {
+			return -num
+		}
+		return num
+	}
+
+	// transaction split
+	transactionSplit := func(transaction string) []string {
+		return strings.Split(transaction, ",")
+	}
+	// converting num String
+	toNum := func(numString string) int {
+		num, err := strconv.Atoi(numString)
+		if err != nil {
+			return 0
+		}
+		return num
+	}
+
+	// populating transaction map with same name and storing their indices
+	for currIndex, transaction := range transactions {
+		transactionSplit := strings.Split(transaction, ",")
+		name := transactionSplit[0]
+		if _, found := transactionMap[name]; found {
+			transactionMap[name] = append(transactionMap[name], currIndex)
+		} else {
+			transactionMap[name] = []int{currIndex}
+		}
+	}
+	// checking through the loop to find which is invalid based on the two rules
+	for _, indices := range transactionMap {
+		for index := 0; index < len(indices); index++ {
+			currTransaction := transactions[indices[index]]
+			currTransactionSplit := transactionSplit(currTransaction)
+			currTransactionAmount := toNum(transactionSplit(currTransaction)[2])
+			// first rule check
+			if currTransactionAmount > 1000 {
+				invalid[indices[index]] = true
+			}
+			for subIndex := index + 1; subIndex < len(indices); subIndex++ {
+				checkTransaction := transactions[indices[subIndex]]
+				checkTransactionSplit := transactionSplit(checkTransaction)
+				time, city := checkTransactionSplit[1], checkTransactionSplit[3]
+				if city != currTransactionSplit[3] {
+					timeDifference := abs(toNum(time) - toNum(currTransactionSplit[1]))
+					// if the rule 2 is sucessful then both them are true
+					if timeDifference <= 60 {
+						invalid[indices[index]] = true
+						invalid[indices[subIndex]] = true
+					}
+				}
+			}
+		}
+	}
+	// populating the index to transaction list if its invalid
+	for index, value := range invalid {
+		if value {
+			transactionRes = append(transactionRes, transactions[index])
+		}
+	}
+	return transactionRes
 }
