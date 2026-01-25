@@ -4458,3 +4458,43 @@ func invalidTransactions(transactions []string) []string {
 	}
 	return transactionRes
 }
+
+// subarrays with k distinct numbers... total count
+func subarraysWithKDistinct(nums []int, k int) int {
+	atMostK := k
+	atMostKSub := k - 1
+	// function to count the subarrays for atmost k values
+	subCount := func(currNums []int, currK int) int {
+		freqMap := make(map[int]int)
+		subCount := 0
+		// main indices to check for left and right indices
+		left := 0
+		right := 0
+
+		for right < len(currNums) {
+			// increasing frequency
+			if _, found := freqMap[currNums[right]]; found {
+				freqMap[currNums[right]]++
+			} else {
+				freqMap[currNums[right]] = 1
+			}
+			// reducing the frequency in order to check
+			for len(freqMap) > currK {
+				if _, found := freqMap[currNums[left]]; found {
+					freqMap[currNums[left]]--
+					currLeftVal := freqMap[currNums[left]]
+					if currLeftVal <= 0 {
+						delete(freqMap, currNums[left])
+					}
+					left++
+				}
+			}
+			subCount += (right - left) + 1
+			right++
+		}
+
+		return subCount
+	}
+
+	return subCount(nums, atMostK) - subCount(nums, atMostKSub)
+}
