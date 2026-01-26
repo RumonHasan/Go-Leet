@@ -4498,3 +4498,67 @@ func subarraysWithKDistinct(nums []int, k int) int {
 
 	return subCount(nums, atMostK) - subCount(nums, atMostKSub)
 }
+
+// giving num pairs divisible by 60 - remainder
+func numPairsDivisibleBy60(time []int) int {
+	memo := make(map[int]int)
+	totalCount := 0
+	for index := 0; index < len(time); index++ {
+		currTime := time[index]
+		currRemainder := currTime % 60
+		var compliment int
+		if currRemainder == 0 {
+			compliment = 0
+		} else {
+			compliment = 60 - currRemainder
+		}
+		if value, found := memo[compliment]; found {
+			totalCount += value
+		}
+		memo[currRemainder]++
+	}
+	return totalCount
+}
+
+// find all recipies
+func findAllRecipes(recipes []string, ingredients [][]string, supplies []string) []string {
+	finalRecipes := []string{}
+	suppliesMap := make(map[string]bool)
+
+	for _, supply := range supplies {
+		suppliesMap[supply] = true
+	}
+
+	changedRecipeStatus := true
+
+	for changedRecipeStatus {
+		changedRecipeStatus = false // for recursive change
+		// only reloop when its made
+		for index, recipe := range recipes {
+			currIngredients := ingredients[index]
+			success := false
+
+			for ingIndex := 0; ingIndex < len(currIngredients); ingIndex++ {
+				currIngredient := currIngredients[ingIndex]
+				if _, found := suppliesMap[currIngredient]; found {
+					success = true
+				} else {
+					success = false
+					break
+				}
+
+			}
+			if success {
+				// if its already made dont add again to prevent infinite loop
+				if _, found := suppliesMap[recipe]; found {
+					continue
+				}
+				suppliesMap[recipe] = true
+				changedRecipeStatus = true
+				finalRecipes = append(finalRecipes, recipe)
+			}
+		}
+	}
+
+	return finalRecipes
+}
