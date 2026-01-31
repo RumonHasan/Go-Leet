@@ -4562,3 +4562,148 @@ func findAllRecipes(recipes []string, ingredients [][]string, supplies []string)
 
 	return finalRecipes
 }
+
+// WORKS BUT TLE
+// hashtable problem for server request time checker
+func countServers(n int, logs [][]int, x int, queries []int) []int {
+	deadServers := []int{}
+	serverMap := make(map[int][]int)
+
+	// populating server map
+	for index := 0; index < len(logs); index++ {
+		serverId, serverTime := logs[index][0], logs[index][1]
+		serverMap[serverId] = append(serverMap[serverId], serverTime)
+	}
+	// sorting the server time logs for each server item
+	for server := 1; server <= n; server++ {
+		sort.Ints(serverMap[server])
+	}
+
+	// main loop to check
+	for queryIndex := 0; queryIndex < len(queries); queryIndex++ {
+		currQueryTime := queries[queryIndex]
+		queryWindow := []int{currQueryTime - x, currQueryTime}
+		serverCount := 0
+		// checking for all servers for existing query window
+		for server := 1; server <= n; server++ {
+			if timeLog, found := serverMap[server]; found {
+				// binary search approach
+				startWindowIndex := sort.Search(len(timeLog), func(i int) bool {
+					return timeLog[i] >= queryWindow[0]
+				})
+				if startWindowIndex < len(timeLog) {
+					startLog := timeLog[startWindowIndex]
+					// check condition because only one time it needs to be true
+					if startLog > queryWindow[1] {
+						serverCount++
+					}
+					// else condition is not counted here
+				} else {
+					serverCount++
+				}
+
+			} else {
+				serverCount++
+			}
+		}
+		deadServers = append(deadServers, serverCount)
+	}
+
+	return deadServers
+}
+
+// length after transformation for the letters of the string
+func lengthAfterTransformations(s string, t int) int {
+	const MOD = 1000000007
+	postTransformationLength := 0
+	freq := make([]int, 26)
+
+	for i := 0; i < len(s); i++ {
+		freq[s[i]-'a']++
+	}
+
+	for t > 0 {
+		newFreq := make([]int, 26)
+		for i := 0; i < 26; i++ {
+			if i == 25 { // 'z'
+				newFreq[0] = (newFreq[0] + freq[i]) % MOD
+				newFreq[1] = (newFreq[1] + freq[i]) % MOD
+			} else {
+				newFreq[i+1] = (newFreq[i+1] + freq[i]) % MOD
+			}
+		}
+		freq = newFreq
+		t--
+	}
+	// calculating length
+	for _, count := range freq {
+		postTransformationLength += count
+	}
+
+	return postTransformationLength % MOD
+}
+
+// finding the minimum cost after teleportation
+func minCostTeleporation(grid [][]int, k int) int {
+	m := len(grid)
+	n := len(grid[0])
+
+	memo := make([][][]int, m)
+	for i := range memo {
+		memo[i] = make([][]int, n)
+		for j := range memo[i] {
+			memo[i][j] = make([]int, k+1)
+			for l := range memo[i][j] {
+				memo[i][j][l] = -1 // -1 means not computed
+			}
+		}
+	}
+
+	var recurse func(int, int, int) int
+	recurse = func(row, col, k_remaining int) int {
+		// main out of boundary base
+		if row >= m || col >= n || row < 0 || col < 0 {
+			return 0
+		}
+		// primary base bath
+		if row == m-1 && col == n-1 {
+			return 0
+		}
+		// memoized minimum value
+		if memo[row][col][k_remaining] != -1 {
+			return memo[row][col][k_remaining]
+		}
+		minCost := math.MaxInt32
+		// main movements of down or right
+		currCost := grid[row][col]
+		down := math.MaxInt32
+		right := math.MaxInt32
+		// checking the next step since starting is free
+		if row+1 < m {
+			down = min(down, recurse(row+1, col, k_remaining)+grid[row+1][col])
+		}
+		if col+1 < n {
+			right = min(right, recurse(row, col+1, k_remaining)+grid[row][col+1])
+		}
+		minCost = min(down, right, minCost) // setting the min cost for the bidirection
+		// teleporation cost check
+		if k_remaining > 0 {
+			// all possible spots for teleportation
+			for i := 0; i < m; i++ {
+				for j := 0; j < n; j++ {
+					if row != i || col != j {
+						if currCost >= grid[i][j] {
+							currTeleportationCost := recurse(i, j, k_remaining-1)
+							minCost = min(minCost, currTeleportationCost)
+						}
+					}
+
+				}
+			}
+		}
+		memo[row][col][k_remaining] = minCost
+		return minCost
+	}
+
+	return recurse(0, 0, k)
+}
