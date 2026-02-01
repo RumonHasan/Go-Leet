@@ -4707,3 +4707,49 @@ func minCostTeleporation(grid [][]int, k int) int {
 
 	return recurse(0, 0, k)
 }
+
+// employee struct
+type Employee struct {
+	Id           int
+	Importance   int
+	Subordinates []int
+}
+
+func getImportance(employees []*Employee, id int) int {
+	employeeMap := make(map[int]*Employee) // key = employee id and int array is subordinates
+	memo := make(map[int]int)
+	// map population
+	for _, val := range employees {
+		employeeMap[val.Id] = val
+	}
+
+	var recurse func(int) int
+	recurse = func(currEmployeeId int) int {
+		// main base case
+		if len(employeeMap[currEmployeeId].Subordinates) == 0 {
+			return employeeMap[currEmployeeId].Importance
+		}
+		key := currEmployeeId
+		if val, found := memo[key]; found {
+			return val
+		}
+		currImportancePoints := employeeMap[currEmployeeId].Importance
+		points := currImportancePoints
+
+		currSubordinates := employeeMap[currEmployeeId].Subordinates
+
+		if len(employeeMap[currEmployeeId].Subordinates) > 0 {
+			for _, val := range currSubordinates {
+				currRecursedPoints := recurse(val)
+				points += currRecursedPoints
+			}
+		}
+
+		memo[key] = points
+		return points
+	}
+
+	totalImportancePoints := recurse(id)
+
+	return totalImportancePoints
+}
