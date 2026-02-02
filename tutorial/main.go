@@ -4753,3 +4753,63 @@ func getImportance(employees []*Employee, id int) int {
 
 	return totalImportancePoints
 }
+
+// returning the total number of stones that can be removed if there is connected row or column
+func removeStones(stones [][]int) int {
+	totalStones := len(stones)
+	removedComponent := 0
+	visitedStoneMap := make([]int, len(stones))
+	for index, _ := range stones {
+		visitedStoneMap[index] = 0 // will be used as boolean
+	}
+	rowMap := make(map[int][]int) // key is row index and the value is stone index
+	colMap := make(map[int][]int) // key is col index and the value is stone index
+
+	// precomputation of row and col indices based on the stone index
+	for index, pair := range stones {
+		row, col := pair[0], pair[1]
+		if _, found := rowMap[row]; found {
+			rowMap[row] = append(rowMap[row], index)
+		} else {
+			rowMap[row] = []int{index}
+		}
+
+		if _, found := colMap[col]; found {
+			colMap[col] = append(colMap[col], index)
+		} else {
+			colMap[col] = []int{index}
+		}
+	}
+	// main recursive function
+	var recurse func(int)
+	recurse = func(currStoneIndex int) {
+		row, col := stones[currStoneIndex][0], stones[currStoneIndex][1]
+		rowStones := rowMap[row]
+		colStones := colMap[col]
+
+		// checking rows
+		for _, stoneIndex := range rowStones {
+			if visitedStoneMap[stoneIndex] == 0 {
+				visitedStoneMap[stoneIndex] = 1
+				recurse(stoneIndex)
+			}
+		}
+
+		for _, stoneIndex := range colStones {
+			if visitedStoneMap[stoneIndex] == 0 {
+				visitedStoneMap[stoneIndex] = 1
+				recurse(stoneIndex)
+			}
+		}
+	}
+	// for loop iteration to check for each starting point for disconnected components
+	for index := 0; index < len(stones); index++ {
+		if visitedStoneMap[index] == 0 {
+			visitedStoneMap[index] = 1
+			recurse(index)
+			removedComponent++
+		}
+	}
+
+	return totalStones - removedComponent
+}
