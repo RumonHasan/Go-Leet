@@ -4813,3 +4813,44 @@ func removeStones(stones [][]int) int {
 
 	return totalStones - removedComponent
 }
+
+func checkRecord(n int) int {
+	const MOD = 1000000007
+	memo := make([][][]int, n)
+	for i := 0; i < n; i++ {
+		memo[i] = make([][]int, 2)
+		for j := 0; j < 2; j++ {
+			memo[i][j] = []int{-1, -1, -1}
+		}
+	}
+
+	var recurse func(int, int, int) int
+	recurse = func(currIndex, a_count, l_count int) int {
+		// main base case leads to one valid path
+		if currIndex == n {
+			return 1
+		}
+		// memoized value
+		if memo[currIndex][a_count][l_count] != -1 {
+			return memo[currIndex][a_count][l_count]
+		}
+		// present
+		total := recurse(currIndex+1, a_count, 0) % MOD
+
+		// absent count
+		if a_count+1 < 2 {
+			absent := recurse(currIndex+1, a_count+1, 0)
+			total = (total + absent) % MOD
+		}
+		// late count is consequtive
+		if l_count+1 < 3 {
+			late := recurse(currIndex+1, a_count, l_count+1)
+			total = (total + late) % MOD
+		}
+
+		memo[currIndex][a_count][l_count] = total % MOD
+		return total
+	}
+
+	return recurse(0, 0, 0)
+}
