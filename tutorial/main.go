@@ -4854,3 +4854,51 @@ func checkRecord(n int) int {
 
 	return recurse(0, 0, 0)
 }
+
+// number of ways to complete the target word
+func numWaysExtract(words []string, target string) int {
+	memo := make(map[[2]int]int) // for col and target index
+	wordLen := len(words[0])
+	colFreq := make([][]int, wordLen)
+	const MOD = 1000000007
+	// precomputation
+	for colIndex := 0; colIndex < wordLen; colIndex++ {
+		colFreq[colIndex] = make([]int, 26)
+	}
+	// adding the frequencies
+	for col := 0; col < wordLen; col++ {
+		for _, word := range words {
+			colFreq[col][word[col]-'a']++ // populates with the col frequency based on the current letter
+		}
+	}
+	var recurse func(int, int) int
+	recurse = func(colIndex, targetIndex int) int {
+		// 1 valid possible path
+		if targetIndex >= len(target) {
+			return 1
+		}
+		// no more colums legt to check
+		if colIndex == wordLen {
+			return 0
+		}
+		// memoized total
+		key := [2]int{colIndex, targetIndex}
+		if val, found := memo[key]; found {
+			return val
+		}
+		totalPath := 0
+		// skip current col
+		skipCurrent := recurse(colIndex+1, targetIndex) % MOD
+		includeCurrent := 0
+		// include current
+		if colFreq[colIndex][target[targetIndex]-'a'] > 0 {
+			occurence := colFreq[colIndex][target[targetIndex]-'a']
+			includeCurrent = (occurence * recurse(colIndex+1, targetIndex+1)) % MOD // for multiple occurence on the same column
+		}
+		totalPath = (includeCurrent + skipCurrent) % MOD
+		memo[key] = totalPath
+		return totalPath
+	}
+
+	return recurse(0, 0)
+}
