@@ -4902,3 +4902,46 @@ func numWaysExtract(words []string, target string) int {
 
 	return recurse(0, 0)
 }
+
+// minimum starting health needed to survive the grid and reach the bottom right cell
+// using dfs memo rewind logic
+func calculateMinimumHP(dungeon [][]int) int {
+	memo := make(map[[2]int]int)
+	rowLen := len(dungeon)
+	colLen := len(dungeon[0])
+
+	// main recursive function state
+	var recurse func(int, int) int
+	recurse = func(currRow, currCol int) int {
+		// base case for out of boundary
+		if currRow >= rowLen || currCol >= colLen {
+			return math.MaxInt32
+		}
+		//last cell return
+		if currRow == rowLen-1 && currCol == colLen-1 {
+			return max(1, 1-dungeon[rowLen-1][colLen-1]) // will return the last health value needed compared to the first
+		}
+		// memoized min health start
+		key := [2]int{currRow, currCol}
+		if val, found := memo[key]; found {
+			return val
+		}
+
+		// main recursive paths
+		down := recurse(currRow+1, currCol)
+		right := recurse(currRow, currCol+1)
+
+		future := min(down, right) - dungeon[currRow][currCol] // subtracting from the minimum every turn
+
+		finalMax := max(1, future)
+		memo[key] = finalMax
+
+		return finalMax
+	}
+
+	minHealthStart := recurse(0, 0)
+	if minHealthStart == math.MaxInt32 {
+		return 0 // unreachable
+	}
+	return minHealthStart
+}
