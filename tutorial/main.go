@@ -4945,3 +4945,51 @@ func calculateMinimumHP(dungeon [][]int) int {
 	}
 	return minHealthStart
 }
+
+// dfs memo running sum remainder path
+func numberOfPaths(grid [][]int, k int) int {
+	const MOD = 1000000007
+	rowLen := len(grid)
+	colLen := len(grid[0])
+
+	// optimized array
+	memoArray := make([][][]int, len(grid))
+	for i := 0; i < rowLen; i++ {
+		memoArray[i] = make([][]int, colLen)
+		for j := 0; j < colLen; j++ {
+			memoArray[i][j] = make([]int, k)
+			for r := 0; r < k; r++ { // here it will be k length not the value of k
+				memoArray[i][j][r] = -1
+			}
+		}
+	}
+
+	var recurse func(int, int, int) int
+	recurse = func(row, col, remainder int) int {
+		// base case
+		if row >= rowLen || col >= colLen {
+			return 0
+		}
+		newRemainder := (remainder + grid[row][col]) % k // needs to be added before the base case
+		// main base value to check whether remainder is 0 or not
+		if row == rowLen-1 && col == colLen-1 {
+			if newRemainder == 0 {
+				return 1
+			}
+			return 0
+		}
+		// memoizaed total value
+		if memoArray[row][col][newRemainder] != -1 {
+			return memoArray[row][col][newRemainder]
+		}
+		// recursive paths
+		down := (recurse(row+1, col, newRemainder)) % MOD
+		right := (recurse(row, col+1, newRemainder)) % MOD
+
+		totalPath := (down + right) % MOD
+		memoArray[row][col][newRemainder] = totalPath
+		return totalPath
+	}
+
+	return recurse(0, 0, 0)
+}
