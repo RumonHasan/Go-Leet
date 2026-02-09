@@ -4993,3 +4993,43 @@ func numberOfPaths(grid [][]int, k int) int {
 
 	return recurse(0, 0, 0)
 }
+
+// getting base costs similar variation to target
+// note any of the base cost can reach the target then its a valid path
+func closestCost(baseCosts []int, toppingCosts []int, target int) int {
+	closestCostVal := baseCosts[0]
+	abs := func(num int) int {
+		if num < 0 {
+			return -num
+		}
+		return num
+	}
+	// for each base its checking all toppings variations
+	var recurse func(int, int)
+	recurse = func(toppingIndex, currCost int) {
+		// main check case
+		if currCost == target {
+			closestCostVal = target
+		} else if abs(closestCostVal-target) > abs(currCost-target) {
+			closestCostVal = currCost
+		} else if abs(closestCostVal-target) == abs(currCost-target) {
+			closestCostVal = min(closestCostVal, currCost)
+		}
+
+		// need to compared first before returning
+		if toppingIndex >= len(toppingCosts) {
+			return
+		}
+		// choose toppings in three variations
+		recurse(toppingIndex+1, currCost+toppingCosts[toppingIndex])
+		recurse(toppingIndex+1, currCost)
+		recurse(toppingIndex+1, currCost+2*toppingCosts[toppingIndex])
+
+	}
+	// iterationf for each base variation
+	for index := 0; index < len(baseCosts); index++ {
+		recurse(0, baseCosts[index])
+	}
+
+	return closestCostVal
+}
