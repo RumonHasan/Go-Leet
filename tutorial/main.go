@@ -5033,3 +5033,47 @@ func closestCost(baseCosts []int, toppingCosts []int, target int) int {
 
 	return closestCostVal
 }
+
+// getting k piles of coins and maxing out
+func maxValueOfCoins(piles [][]int, k int) int {
+
+	memoArray := make([][]int, len(piles))
+
+	for index := 0; index < len(piles); index++ {
+		memoArray[index] = make([]int, k+1)
+		for subIndex := 0; subIndex <= k; subIndex++ {
+			memoArray[index][subIndex] = -1
+		}
+	}
+
+	var recurse func(int, int) int
+	recurse = func(pileIndex, remainingK int) int {
+		// main base case
+		if pileIndex >= len(piles) {
+			return 0
+		}
+		// memoized max value
+		if memoArray[pileIndex][remainingK] != -1 {
+			return memoArray[pileIndex][remainingK]
+		}
+		// skip current pile
+		skipCurrentPile := recurse(pileIndex+1, remainingK)
+
+		bestSum := 0
+		currSum := 0
+
+		// checking for each pile how many I can take within the current pile length
+		for index := 0; index < min(remainingK, len(piles[pileIndex])); index++ {
+			currSum += piles[pileIndex][index]
+
+			currRecursedPath := currSum + recurse(pileIndex+1, remainingK-(index+1))
+			bestSum = max(bestSum, currRecursedPath)
+
+		}
+		bestSum = max(bestSum, skipCurrentPile)
+		memoArray[pileIndex][remainingK] = bestSum
+		return bestSum
+	}
+
+	return recurse(0, k)
+}
