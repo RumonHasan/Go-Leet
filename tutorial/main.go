@@ -5077,3 +5077,42 @@ func maxValueOfCoins(piles [][]int, k int) int {
 
 	return recurse(0, k)
 }
+
+// duplicates dont matter
+func longestBalanced(nums []int) int {
+	maxLen := 0
+	numCheck := func(num int) bool {
+		return num%2 == 0
+	}
+	for index := 0; index < len(nums); index++ {
+		evenMap := make(map[int]int)
+		oddMap := make(map[int]int)
+		currNum := nums[index]
+		// initialization
+		if currNum%2 == 0 {
+			evenMap[currNum] = 1
+		} else {
+			oddMap[currNum] = 1
+		}
+
+		for subIndex := index + 1; subIndex < len(nums); subIndex++ {
+			currSub := nums[subIndex]
+			currNumState := numCheck(currSub)
+			if currNumState {
+				if _, found := evenMap[currSub]; !found {
+					evenMap[currSub] = 1
+				}
+			} else {
+				if _, found := oddMap[currSub]; !found {
+					oddMap[currSub] = 1
+				}
+			}
+			if len(oddMap) == len(evenMap) {
+				maxLen = max(maxLen, (subIndex-index)+1)
+			}
+
+		}
+	}
+
+	return maxLen
+}
