@@ -5116,3 +5116,35 @@ func longestBalanced(nums []int) int {
 
 	return maxLen
 }
+
+// longest balanced array where the stirng is balanced based on the occurence being unique
+func longestBalancedString(s string) int {
+	maxLenSub := 1
+	sLen := len(s)
+
+	for index := 0; index < sLen; index++ {
+		// distinct map initialization
+		dMap := make(map[byte]int)
+		localMaxFreq := 0  // for calculating the local freq of the max
+		dMap[s[index]] = 1 // starting from parent index letter
+		localMaxFreq = dMap[s[index]]
+
+		for subIndex := index + 1; subIndex < sLen; subIndex++ {
+			currSubLetter := s[subIndex]
+			if _, found := dMap[currSubLetter]; found {
+				dMap[currSubLetter]++
+				localMaxFreq = max(localMaxFreq, dMap[currSubLetter]) // only update the curr max of the letter if the occurence increases
+			} else {
+				dMap[currSubLetter] = 1
+			}
+			distinctLen := len(dMap)
+			acquiredLen := distinctLen * localMaxFreq
+			currSubLen := (subIndex - index) + 1
+			if acquiredLen == currSubLen {
+				maxLenSub = max(maxLenSub, acquiredLen)
+			}
+		}
+
+	}
+	return maxLenSub
+}
