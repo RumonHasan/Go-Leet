@@ -5148,3 +5148,49 @@ func longestBalancedString(s string) int {
 	}
 	return maxLenSub
 }
+
+func minRemoveToMakeValid(s string) string {
+	remove := make(map[int]bool) // for closing brackets that are remaining
+	stack := []int{}
+	opening := '('
+	closing := ')'
+
+	checkChar := func(char byte) bool {
+		if char >= 97 && char <= 122 {
+			return true
+		}
+		return false
+	}
+
+	for index := 0; index < len(s); index++ {
+		var currChar byte
+		currChar = s[index]
+		isChar := checkChar(currChar)
+		if !isChar {
+			if currChar == byte(opening) {
+				stack = append(stack, index) // adding opening bracket index
+			} else if currChar == byte(closing) {
+				if len(stack) == 0 {
+					remove[index] = true
+				} else if len(stack) > 0 {
+					stack = stack[:len(stack)-1] // popping last element
+				}
+			}
+		}
+	}
+
+	for _, index := range stack {
+		remove[index] = true
+	}
+
+	var res string
+	// removing extras
+	for index := 0; index < len(s); index++ {
+		if !remove[index] {
+			res += string(s[index])
+		}
+
+	}
+
+	return res
+}
