@@ -5194,3 +5194,63 @@ func minRemoveToMakeValid(s string) string {
 
 	return res
 }
+
+// HARD LEVEL: getting the minimum window substrin that has all included characters of t using sliding window approach
+func minWindow(s string, t string) string {
+	required := 0 // unique chars from t
+	formed := 0   // increment when there is valid frequency for current char
+	tMap := make(map[byte]int)
+	// for sliding window indices
+	end := 0
+	start := 0
+	minStart := 0
+	minEnd := 0
+	rangeLen := math.MaxInt32
+	sMap := make(map[byte]int)
+	// result string
+	var res string // final string after extracted based on the range
+
+	// populate t map with t chars
+	for index := 0; index < len(t); index++ {
+		tMap[t[index]]++
+	}
+	required = len(tMap)
+
+	// sliding window for the current map
+	for end < len(s) {
+		// only add if the char is found on t
+		if _, found := tMap[s[end]]; found {
+			sMap[s[end]]++
+		}
+		// only when the current char occurence meets equality with the tMap then formed increases
+		if _, found := tMap[s[end]]; found {
+			if sMap[s[end]] == tMap[s[end]] {
+				formed++
+			}
+		}
+
+		// if the required length is achieved then we start reducing from the left side
+		for formed == required && start < len(s) {
+			currLen := (end - start) + 1
+			if rangeLen > currLen {
+				minStart = start
+				minEnd = end
+				rangeLen = currLen
+			}
+			// reduce the current len shring only if its found
+			if _, found := tMap[s[start]]; found {
+				sMap[s[start]]--
+				if sMap[s[start]] < tMap[s[start]] {
+					formed--
+				}
+			}
+			start++
+		}
+		end++
+	}
+	if rangeLen == math.MaxInt32 {
+		return ""
+	}
+	res = s[minStart : minEnd+1]
+	return res
+}
