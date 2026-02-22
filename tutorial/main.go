@@ -5254,3 +5254,108 @@ func minWindow(s string, t string) string {
 	res = s[minStart : minEnd+1]
 	return res
 }
+
+// valid substring count
+func validSubstringCount(word1 string, word2 string) int64 {
+	required := 0
+	formed := 0
+	twoMap := make(map[byte]int)
+	oneMap := make(map[byte]int)
+	count := 0
+	end := 0
+	start := 0
+	// populate the check map
+	for index := 0; index < len(word2); index++ {
+		currChar := word2[index]
+		twoMap[currChar]++
+	}
+	required = len(twoMap) // will be used as the distinct requirement value
+
+	for end < len(word1) {
+		// only add chars that are in word 1
+		if _, found := twoMap[word1[end]]; found {
+			oneMap[word1[end]]++
+		}
+		// checking the occurence whether its equal to the two map one or not
+		if _, found := twoMap[word1[end]]; found {
+			if oneMap[word1[end]] == twoMap[word1[end]] {
+				formed++
+			}
+		}
+
+		for formed == required {
+			count += len(word1) - end // main length calculation
+
+			if _, found := twoMap[word1[start]]; found {
+				if _, found := oneMap[word1[start]]; found {
+					oneMap[word1[start]]--
+				}
+			}
+			// reducing the formed number if the frequency drops of the current one Map tracking
+			if _, found := twoMap[word1[start]]; found {
+				if oneMap[word1[start]] < twoMap[word1[start]] {
+					formed--
+				}
+			}
+			start++
+		}
+		end++
+	}
+
+	return int64(count)
+}
+
+// more optimized version
+func validSubstringCountII(word1 string, word2 string) int64 {
+	required := 0
+	formed := 0
+	twoMap := make([]int, 26)
+	oneMap := make([]int, 26)
+	count := 0
+	end := 0
+	start := 0
+	// populate the check map
+	for index := 0; index < len(word2); index++ {
+		currChar := word2[index]
+		twoMap[currChar-'a']++
+	}
+	for index := 0; index < len(twoMap); index++ {
+		currVal := twoMap[index]
+		if currVal > 0 {
+			required++
+		}
+	}
+
+	for end < len(word1) {
+		// only add chars that are in word 1
+		if twoMap[word1[end]-'a'] > 0 {
+			oneMap[word1[end]-'a']++
+		}
+		// checking the occurence whether its equal to the two map one or not
+		if twoMap[word1[end]-'a'] > 0 {
+			if oneMap[word1[end]-'a'] == twoMap[word1[end]-'a'] {
+				formed++
+			}
+		}
+
+		for formed == required {
+			count += len(word1) - end // main length calculation
+
+			if twoMap[word1[start]-'a'] > 0 {
+				if oneMap[word1[start]-'a'] > 0 {
+					oneMap[word1[start]-'a']--
+				}
+			}
+			// reducing the formed number if the frequency drops of the current one Map tracking
+			if twoMap[word1[start]-'a'] > 0 {
+				if oneMap[word1[start]-'a'] < twoMap[word1[start]-'a'] {
+					formed--
+				}
+			}
+			start++
+		}
+		end++
+	}
+
+	return int64(count)
+}
