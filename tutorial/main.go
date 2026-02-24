@@ -5432,3 +5432,20 @@ func minSwapsAdjacent(nums []int) int {
 	return min(cost1, cost2)
 
 }
+
+// hard more for checking substrings whether they are equal or not
+func distinctEchoSubstrings(text string) int {
+	subMap := make(map[string]int)
+	textLen := len(text)
+
+	for index := 0; index < textLen; index++ {
+		for k := 1; index+2*k <= textLen; k++ {
+			firstHalf := text[index : index+k]
+			secondHalf := text[index+k : index+2*k]
+			if firstHalf == secondHalf {
+				subMap[firstHalf]++
+			}
+		}
+	}
+	return len(subMap)
+}
