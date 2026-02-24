@@ -5359,3 +5359,76 @@ func validSubstringCountII(word1 string, word2 string) int64 {
 
 	return int64(count)
 }
+
+// HARD problem for swap adjustments
+func minSwapsAdjacent(nums []int) int {
+	oddCount := 0
+	evenCount := 0
+	abs := func(num int) int {
+		if num < 0 {
+			return -num
+		}
+		return num
+	}
+	for _, num := range nums {
+		if num%2 == 0 {
+			evenCount++
+		} else {
+			oddCount++
+		}
+	}
+	// currindices return
+	currIndicesArray := func(parity string) []int {
+		currIndices := []int{}
+		for index := 0; index < len(nums); index++ {
+			currVal := nums[index]
+			if currVal%2 == 0 && parity == "even" {
+				currIndices = append(currIndices, index)
+			} else if parity == "odd" && currVal%2 == 1 {
+				currIndices = append(currIndices, index)
+			}
+		}
+		return currIndices
+	}
+
+	// to calculate distance and swap count
+	distanceCalculator := func(currentIndices []int, targetIndices []int) int {
+		count := 0
+		for index := 0; index < len(currentIndices); index++ {
+			commonLen := abs(currentIndices[index] - targetIndices[index])
+			count += commonLen
+		}
+		return count
+	}
+
+	// functions to calculate the even and odd count3
+	positionCalculator := func(parity string, startIndex int) int {
+		minSwapCount := 0
+		targetIndices := make([]int, len(currIndicesArray(parity)))
+		for index := 0; index < len(targetIndices); index++ {
+			targetIndices[index] = 2*index + startIndex
+		}
+		currIndices := []int{}
+		currIndices = currIndicesArray(parity)
+		minSwapCount = distanceCalculator(currIndices, targetIndices)
+		return minSwapCount
+	}
+
+	// if the difference is bigger than 1 then return negative because lack of alternating numbers
+	if abs(oddCount-evenCount) > 1 {
+		return -1
+	}
+	// placing even first is beneficial
+	if evenCount > oddCount {
+		return positionCalculator("even", 0)
+	}
+
+	if oddCount > evenCount {
+		return positionCalculator("even", 1)
+	}
+
+	cost1 := positionCalculator("even", 0)
+	cost2 := positionCalculator("even", 1)
+	return min(cost1, cost2)
+
+}
