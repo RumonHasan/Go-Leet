@@ -5449,3 +5449,59 @@ func distinctEchoSubstrings(text string) int {
 	}
 	return len(subMap)
 }
+
+// extracting duplicate file names
+func findDuplicate(paths []string) [][]string {
+	files := [][]string{}
+	contentMap := make(map[string][]string)
+	opening := '('
+	closing := ')'
+
+	// extracting the contents
+	for _, filePath := range paths {
+
+		currFileSplit := strings.Split(filePath, " ")
+		fileRoot := currFileSplit[0] // main file root for attachment with other files
+		remainingFilePath := currFileSplit[1:len(currFileSplit)]
+
+		for index := 0; index < len(remainingFilePath); index++ {
+			fileChunk := remainingFilePath[index] // single file chunk with content included
+			var fileContent string
+			var fileName string
+			isContent := false
+
+			for chunkIndex := 0; chunkIndex < len(fileChunk); chunkIndex++ {
+				chunkChar := fileChunk[chunkIndex]
+				if chunkChar == byte(opening) {
+					isContent = true
+					continue
+				} else if chunkChar == byte(closing) {
+					isContent = false
+					continue
+				}
+				// only add when isContent is true and when isContent is false rest are added to file name
+				if isContent {
+					fileContent += string(chunkChar)
+				} else if !isContent {
+					fileName += string(chunkChar)
+				}
+			}
+			fullFileRoot := fileRoot + "/" + fileName // formed file root name
+			if _, found := contentMap[fileContent]; found {
+				contentMap[fileContent] = append(contentMap[fileContent], fullFileRoot)
+			} else {
+				contentMap[fileContent] = []string{fullFileRoot}
+			}
+
+		}
+	}
+	// populating final collection
+	for _, fileRootCollection := range contentMap {
+		if len(fileRootCollection) > 1 {
+			files = append(files, fileRootCollection)
+		}
+
+	}
+
+	return files
+}
