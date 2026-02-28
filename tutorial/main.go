@@ -5505,3 +5505,44 @@ func findDuplicate(paths []string) [][]string {
 
 	return files
 }
+
+// minimum operations for checking each and every query
+func minOperations(nums []int, queries []int) []int64 {
+	queryCost := make([]int64, len(queries))
+	// sorting the queries to performa binary search by extracting the range
+	sort.Slice(nums, func(i, j int) bool {
+		return nums[i] < nums[j]
+	})
+	// prefix sum to use with binary search extracted index
+	prefixSum := make([]int, len(nums))
+	for index := 0; index < len(nums); index++ {
+		currNum := nums[index]
+		if index == 0 {
+			prefixSum[index] = currNum
+		} else if index > 0 {
+			prefixSum[index] = prefixSum[index-1] + currNum
+		}
+	}
+
+	// main loop to check through each query
+	for queryIndex, query := range queries {
+		// cut off index where the current num is bigger than the query
+		cutOffIndex := sort.Search(len(nums), func(i int) bool {
+			return query < nums[i]
+		})
+		leftHalfSum := 0
+		if cutOffIndex == 0 {
+			leftHalfSum = 0 // will be the last sum value before the jump to next biggest index
+		} else {
+			leftHalfSum = prefixSum[cutOffIndex-1]
+		}
+
+		rightHalfSum := prefixSum[len(prefixSum)-1] - leftHalfSum
+
+		leftHalfLen := cutOffIndex
+		rightHalfLen := len(prefixSum) - cutOffIndex
+		queryCost[queryIndex] = (int64(query)*int64(leftHalfLen) - int64(leftHalfSum)) + (int64(rightHalfSum) - int64(query)*int64(rightHalfLen))
+	}
+
+	return queryCost
+}
