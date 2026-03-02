@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"math"
 	"math/rand"
 	"sort"
@@ -5545,4 +5546,52 @@ func minOperations(nums []int, queries []int) []int64 {
 	}
 
 	return queryCost
+}
+
+// HARD LEVEL : using substrings and chunking each part individually and checking
+func findSubstringWithAllConcatenationOfWords(s string, words []string) []int {
+	wordFreqMap := make(map[string]int)
+	chunkSize := len(words[0])           // fixed length of a single word
+	windowSize := chunkSize * len(words) // size of the substring window to check
+	res := []int{}
+
+	// populating wordFreqMap
+	for _, word := range words {
+		wordFreqMap[word]++
+	}
+
+	// main loop only will loop till the substracted size
+	for index := 0; index <= len(s)-windowSize; index++ { // needs to be equal to get every size
+		remainingMap := make(map[string]int)
+		maps.Copy(remainingMap, wordFreqMap)
+		subWindow := s[index : index+windowSize]
+		chunkCounter := 0
+
+		// subwindow traversal based on chunk size needs to equal
+		for subIndex := 0; subIndex <= len(subWindow)-chunkSize; subIndex += chunkSize {
+			currChunk := subWindow[subIndex : subIndex+chunkSize]
+
+			if _, found := remainingMap[currChunk]; !found {
+				break
+			}
+			// keeps a continuous iteration so if all subs are equal and true then will pass
+			if val, found := remainingMap[currChunk]; found {
+				if found && val == 0 {
+					chunkCounter = 0
+					break
+				}
+				remainingMap[currChunk]--
+				chunkCounter++
+			}
+		}
+
+		// only add the starting indices
+		if chunkCounter*chunkSize == windowSize {
+			res = append(res, index)
+		}
+
+	}
+
+	return res
+
 }
