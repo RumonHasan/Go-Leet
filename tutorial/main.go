@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 )
 
 type gasEngine struct {
@@ -5591,7 +5592,57 @@ func findSubstringWithAllConcatenationOfWords(s string, words []string) []int {
 		}
 
 	}
-
 	return res
 
+}
+
+// camel matching using nested loops
+func camelMatch(queries []string, pattern string) []bool {
+	res := make([]bool, len(queries))
+
+	isUpper := func(char byte) bool {
+		charRune := rune(char)
+		if unicode.IsUpper(charRune) {
+			return true
+		}
+		return false
+	}
+
+	for index, query := range queries {
+		patternIndex := 0
+		isPatternBreak := false
+
+		// traversing each query
+		for q := 0; q < len(query); q++ {
+			currQueryChar := query[q]
+			currQueryCharState := isUpper(currQueryChar)
+
+			if patternIndex < len(pattern) {
+				if currQueryCharState {
+					if pattern[patternIndex] == currQueryChar {
+						patternIndex++
+					} else {
+						isPatternBreak = true
+						break
+					}
+				} else {
+					if pattern[patternIndex] == currQueryChar {
+						patternIndex++
+					}
+				}
+
+			} else if patternIndex >= len(pattern) && currQueryCharState {
+				isPatternBreak = true
+				break
+			}
+		}
+		// only add if the first condition is successful
+		if isPatternBreak {
+			res[index] = false
+		} else {
+			res[index] = patternIndex >= len(pattern)
+		}
+	}
+
+	return res
 }
