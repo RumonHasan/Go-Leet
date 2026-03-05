@@ -5646,3 +5646,41 @@ func camelMatch(queries []string, pattern string) []bool {
 
 	return res
 }
+
+// rearrange the string and form the combinations
+func smallestPalindrome(s string) string {
+	freqMap := make([]int, 26)
+	midString := ""
+	firstHalf := ""
+	secondHalf := ""
+	final := ""
+	foundMid := false
+
+	// populating frequencies
+	for index := 0; index < len(s); index++ {
+		freqMap[byte(s[index])-'a']++
+	}
+	// checking which letters have even and odd
+	for index := 0; index < 26; index++ {
+		currFrequency := freqMap[index]
+		halfLen := 0
+
+		if currFrequency%2 == 1 {
+			if !foundMid {
+				midString += string('a' + index)
+				foundMid = true
+			}
+		}
+		halfLen = currFrequency / 2 // automatically floors it but adds for both odd and even
+		for i := 0; i < halfLen; i++ {
+			firstHalf += string('a' + index) // returns back the char
+		}
+	}
+	for index := len(firstHalf) - 1; index >= 0; index-- {
+		secondHalf += string(firstHalf[index])
+	}
+
+	final = firstHalf + midString + secondHalf
+
+	return final
+}
