@@ -5676,6 +5676,7 @@ func smallestPalindrome(s string) string {
 			firstHalf += string('a' + index) // returns back the char
 		}
 	}
+	// reverse iteration of the string
 	for index := len(firstHalf) - 1; index >= 0; index-- {
 		secondHalf += string(firstHalf[index])
 	}
@@ -5683,4 +5684,253 @@ func smallestPalindrome(s string) string {
 	final = firstHalf + midString + secondHalf
 
 	return final
+}
+
+// DFS MEMO Hard Approach - typical sliding puzzle problem where 0 is the empty space
+// use BFS ... need the shortest path here
+func slidingPuzzle(board [][]int) int {
+	memo := make(map[string]int)
+	correctString := "123450"
+	visitedSet := make(map[string]bool)
+
+	// main neighbor array that will be used
+	neighbors := [][]int{
+		{1, 3},    // position 0
+		{0, 2, 4}, // position 1
+		{1, 5},    // position 2
+		{0, 4},    // position 3
+		{1, 3, 5}, // position 4
+		{2, 4},    // position 5
+	}
+	startString := ""
+	// flattened start string
+	for i := 0; i < 2; i++ {
+		for j := 0; j < 3; j++ {
+			startString += strconv.Itoa(board[i][j])
+		}
+	}
+	// main recursive function to check after every swap
+	var recurse func(string) int
+	recurse = func(boardString string) int {
+		key := boardString
+		// main base case for returning one valid path
+		if boardString == correctString {
+			return 0
+		}
+		if val, found := memo[key]; found {
+			return val
+		}
+		minSwaps := math.MaxInt32
+		currZeroPosition := strings.Index(boardString, "0")
+		visitedSet[boardString] = true
+		// trying all the neiboards
+		for _, neighbor := range neighbors[currZeroPosition] {
+			bytes := []byte(boardString)
+			bytes[currZeroPosition], bytes[neighbor] = bytes[neighbor], bytes[currZeroPosition]
+			newString := string(bytes)
+
+			if !visitedSet[newString] {
+
+				currRecursiveRes := recurse(newString)
+				if currRecursiveRes != -1 {
+					minSwaps = min(minSwaps, currRecursiveRes+1)
+				}
+			}
+		}
+		visitedSet[boardString] = false
+		memo[key] = minSwaps
+		return minSwaps
+	}
+	res := recurse(startString)
+	if res == math.MaxInt32 {
+		return -1
+	}
+	return res
+}
+
+// calculating the longest duplicate using the Rabin karp algorithm
+func longestDupSubstring(s string) string {
+	result := ""
+
+	hasDuplicate := func(s string, currMid int) bool {
+		if currMid == 0 {
+			return false
+		}
+		seen := make(map[int]string)
+		hash := 0
+		base := 26
+		mod := 1<<31 - 1
+
+		power := 1
+		for i := 0; i < currMid-1; i++ {
+			power = (power * base) % mod
+		}
+
+		for i := 0; i < currMid; i++ {
+			hash = (hash*base + int(s[i]-'a')) % mod
+		}
+		seen[hash] = s[0:currMid]
+
+		for index := currMid; index < len(s); index++ {
+			leftChar := s[index-currMid]
+			newChar := s[index]
+			hash = ((hash-int(leftChar-'a')*power%mod+mod)*base + int(newChar-'a')) % mod
+
+			currSub := s[index-currMid+1 : index+1]
+			if prev, found := seen[hash]; found && prev == currSub {
+				if len(result) < len(currSub) {
+					result = currSub
+				}
+				return true
+			}
+			seen[hash] = currSub
+		}
+		return false
+	}
+
+	acquiredLength := sort.Search(len(s), func(mid int) bool {
+		return !hasDuplicate(s, mid)
+	}) - 1
+
+	if acquiredLength <= 0 {
+		return ""
+	}
+	return result
+}
+
+// using the KMP algorithm to get the longest prefix that is also a suffix
+func longestPrefix(s string) string {
+	sLen := len(s)
+	lps := make([]int, sLen)
+	prefLen := 0
+	suffIndex := 1
+	// KMP algorithm
+	for suffIndex < sLen {
+		// for equal condition
+		if s[suffIndex] == s[prefLen] {
+			prefLen = prefLen + 1
+			lps[suffIndex] = prefLen  // only add if there is a valid value
+			suffIndex = suffIndex + 1 // both of the values should move forward
+		} else {
+			if prefLen != 0 {
+				prefLen = lps[prefLen-1] // we go back to the earliest valid matched sequence
+			} else {
+				lps[suffIndex] = 0
+				suffIndex = suffIndex + 1
+			}
+		}
+	}
+	// construct the longest happy prefix
+	longestSuffLen := lps[len(lps)-1]
+	return s[:longestSuffLen]
+}
+
+// using the KMP algorithm to check for the shortest possible palindrome
+func shortestPalindrome(s string) string {
+	lps := make([]int, len(s)*2+1)
+
+	// base function to reverse a string
+	revString := func(s string) string {
+		rev := ""
+		for index := len(s) - 1; index >= 0; index-- {
+			currChar := s[index]
+			rev += string(currChar)
+		}
+		return rev
+	}
+
+	combinedString := s + "#" + revString(s)
+
+	prefLen := 0
+	suffIndex := 1
+
+	// getting the lps array
+	for suffIndex < len(combinedString) {
+		if combinedString[suffIndex] == combinedString[prefLen] {
+			prefLen += 1
+			lps[suffIndex] = prefLen
+			suffIndex++
+		} else {
+			if prefLen != 0 {
+				prefLen = lps[prefLen-1]
+			} else {
+				lps[suffIndex] = 0
+				suffIndex++
+			}
+		}
+	}
+
+	longestMatch := lps[len(lps)-1]
+
+	// the prefix matching is taken from the original suffix section of the entire string
+	prefixRev := revString(s[longestMatch:]) // taking the left over from the back
+	res := prefixRev + s
+
+	return res
+}
+
+// finding the least interval using hashtable and greedy approach
+func leastInterval(tasks []byte, n int) int {
+	freqMap := make(map[byte]int)
+	leastInterval := len(tasks)
+	maxFrequency := 0
+	tasksWithSameMaxFreq := 0
+
+	for index := 0; index < len(tasks); index++ {
+		currCharByte := tasks[index]
+		freqMap[currCharByte]++
+		// updating the max frequency
+		if occurence, found := freqMap[currCharByte]; found {
+			if occurence > maxFrequency {
+				maxFrequency = occurence
+			}
+		}
+	}
+	// getting number of similar max freqs
+	for _, value := range freqMap {
+		if value == maxFrequency { // similar max freq I add em
+			tasksWithSameMaxFreq++
+		}
+	}
+	// total groups times each group size + extra
+	leastInterval = max(leastInterval, (maxFrequency+1)*(n+1)+tasksWithSameMaxFreq)
+
+	return leastInterval
+}
+
+// HARD Problem climbing the stairs using dfs memo
+func waysToReachStair(k int) int {
+	totalWays := 0
+	memo := make(map[[3]int]int)
+
+	var recurse func(int, int, int) int
+	recurse = func(jumpCount int, currPosition int, justWentDown int) int {
+		key := [3]int{jumpCount, currPosition, justWentDown}
+		currCount := 0
+		// base cases
+		if currPosition == k {
+			currCount = 1
+		}
+		// if the position goes above 1 then its dead end because of exponential jumps
+		if currPosition > k+1 {
+			return 0
+		}
+		// memoized path
+		if val, found := memo[key]; found {
+			return val
+		}
+		// go down
+		if currPosition > 0 && justWentDown == 0 {
+			currCount += recurse(jumpCount, currPosition-1, 1)
+		}
+		// go up
+		currCount += recurse(jumpCount+1, currPosition+(1<<jumpCount), 0)
+
+		memo[key] = currCount
+		return currCount
+	}
+
+	totalWays = recurse(0, 1, 0) // will return the accumulated ways
+
+	return totalWays
 }
