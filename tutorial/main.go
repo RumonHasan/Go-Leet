@@ -5934,3 +5934,106 @@ func waysToReachStair(k int) int {
 
 	return totalWays
 }
+
+// HARD level: target reaching dfs memo problem ... ONLY BFS is accepted
+func racecar(target int) int {
+	memo := make(map[[2]int]int)
+
+	var recurse func(int, int) int
+	recurse = func(currPosition, currSpeed int) int {
+		// primary base case
+		if currPosition == target {
+			return 0
+		}
+		// primary stopping bounds
+		if currPosition < 0 || currPosition > 2*target {
+			return math.MaxInt32
+		}
+		// adding a speed bound
+		if currSpeed > 2*target || currSpeed < -2*target {
+			return math.MaxInt32
+		}
+		// memoized minimum ways to reach target value
+		key := [2]int{currPosition, currSpeed}
+		if val, found := memo[key]; found {
+			return val
+		}
+
+		// main decision tree
+		nextPos := currPosition + currSpeed
+
+		// always try accelerate
+		positionA := 1 + recurse(nextPos, currSpeed*2)
+
+		positionB := math.MaxInt32
+
+		// reverse ONLY if we overshoot OR going wrong direction
+		if (nextPos > target && currSpeed > 0) ||
+			(nextPos < target && currSpeed < 0) {
+
+			if currSpeed > 0 {
+				positionB = 1 + recurse(currPosition, -1)
+			} else {
+				positionB = 1 + recurse(currPosition, 1)
+			}
+		}
+
+		finalPosition := min(positionA, positionB)
+		memo[key] = finalPosition
+		return finalPosition
+	}
+
+	return recurse(0, 1) // starting speed is always 1
+}
+
+// getting the largest number possible based on the budget given and its constraints .. 0/1 Knapsack DFS Memo approach
+// cost corresponds to the numbers from 1 to 9 in the array
+func largestNumberBasedOnBudget(cost []int, target int) string {
+	memo := make(map[int]string)
+
+	var recurse func(int) string
+	recurse = func(remainingBudget int) string {
+		// primary base case meaning no strings need to be returned and its correct
+		if remainingBudget == 0 {
+			return ""
+		}
+		// if the remaining budget is overused then return -1 as string
+		if remainingBudget < 0 {
+			return "-1"
+		}
+		// memoized remaining max budget string
+		key := remainingBudget
+		if val, found := memo[key]; found {
+			return val
+		}
+
+		bestString := "-1"
+
+		// going from the biggest to the smallest
+		for digit := 9; digit >= 1; digit-- {
+			currDigitCost := cost[digit-1]
+			subResult := recurse(remainingBudget - currDigitCost)
+			possibleCandidate := strconv.Itoa(digit) + subResult // responsible for adding a target string
+
+			// no progress can be made
+			if subResult == "-1" {
+				continue
+			}
+			if bestString == "-1" {
+				bestString = possibleCandidate
+			} else if len(possibleCandidate) > len(bestString) {
+				bestString = possibleCandidate
+			} else if len(possibleCandidate) == len(bestString) && possibleCandidate > bestString {
+				bestString = possibleCandidate
+			}
+		}
+
+		memo[key] = bestString
+		return bestString
+	}
+	finalCost := recurse(target)
+	if finalCost == "-1" {
+		return "0"
+	}
+	return recurse(target)
+}
