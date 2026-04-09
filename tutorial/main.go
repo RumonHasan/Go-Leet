@@ -6037,3 +6037,67 @@ func largestNumberBasedOnBudget(cost []int, target int) string {
 	}
 	return recurse(target)
 }
+
+// medium level hash map problem
+func findAnagrams(s string, p string) []int {
+	result := []int{}
+	formed := 0
+	required := 0
+	pMap := make(map[byte]int)
+	sMap := make(map[byte]int)
+	// base case for checking if s is shorter than p
+	if len(s) < len(p) {
+		return []int{}
+	}
+
+	// checking pMap ranges
+	for _, currChar := range p {
+		pMap[byte(currChar)]++
+	}
+	required = len(pMap) // number of unique characters in th pattern
+
+	// initial check for traversal
+	for index := 0; index < len(p); index++ {
+		sChar := s[index]
+		if _, found := pMap[sChar]; found {
+			sMap[sChar]++
+			if sMap[sChar] == pMap[sChar] {
+				formed++
+			}
+		}
+
+	}
+	// incase the condition qualifies in the first case
+	if formed == required {
+		result = append(result, 0)
+	}
+	// stacking and popping approach
+	end := len(p)
+	start := 0
+	for end < len(s) {
+		currChar := s[end]
+		currStartChar := s[start]
+
+		if _, found := pMap[currStartChar]; found {
+			if sMap[currStartChar] == pMap[currStartChar] {
+				formed--
+			}
+			sMap[currStartChar]--
+		}
+
+		if _, found := pMap[currChar]; found {
+			sMap[currChar]++
+			if sMap[currChar] == pMap[currChar] {
+				formed++
+			}
+		}
+
+		if formed == required {
+			result = append(result, start+1)
+		}
+		end++
+		start++
+	}
+
+	return result
+}
