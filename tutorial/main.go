@@ -6101,3 +6101,54 @@ func findAnagrams(s string, p string) []int {
 
 	return result
 }
+
+// finding the minimum cost of teaching a friend one language that can be shared
+func minimumTeachings(n int, languages [][]int, friendships [][]int) int {
+	m := len(languages)                // main length for the users
+	knows := make([]map[int]bool, m+1) // main map will store the user and languages
+
+	// populating the map for knows
+	for user := 1; user <= m; user++ {
+		languageIndex := user - 1
+		knows[user] = make(map[int]bool)
+		for _, language := range languages[languageIndex] {
+			knows[user][language] = true // since these are the languages they can speak
+		}
+	}
+	brokenPairs := [][]int{}
+	// finding broken pairs by going through each friendship pair
+	for index := 0; index < len(friendships); index++ {
+		userOne, userTwo := friendships[index][0], friendships[index][1]
+		isBroken := false
+		for langOne, _ := range knows[userOne] {
+			if knows[userTwo][langOne] {
+				isBroken = true // connection formed
+				break
+			}
+		}
+		if !isBroken {
+			brokenPairs = append(brokenPairs, []int{userOne, userTwo})
+		}
+	}
+
+	// extracting users from broken pairs
+	brokenUsers := make(map[int]bool)
+	for _, pair := range brokenPairs {
+		userOne, userTwo := pair[0], pair[1]
+		brokenUsers[userOne] = true
+		brokenUsers[userTwo] = true
+	}
+	minCount := len(brokenUsers) // can be the full length since nothing is common that means for starting value
+	// now getting the minimum count after checking thourgh each language
+	for lang := 1; lang <= n; lang++ {
+		localMinCount := 0
+		// check broken users
+		for user, _ := range brokenUsers {
+			if !knows[user][lang] {
+				localMinCount++
+			}
+		}
+		minCount = min(minCount, localMinCount)
+	}
+	return minCount
+}
