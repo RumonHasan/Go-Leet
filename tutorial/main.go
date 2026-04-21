@@ -6152,3 +6152,114 @@ func minimumTeachings(n int, languages [][]int, friendships [][]int) int {
 	}
 	return minCount
 }
+
+// converting at most one element from 0 to 1 to find the maximum chain of islands and return the max area
+func largestIsland(grid [][]int) int {
+	rowLen := len(grid)
+	colLen := len(grid[0])
+	labelCounter := 2
+	maxIslandArea := 0
+	directions := [][]int{{0, 1}, {0, -1}, {-1, 0}, {1, 0}}
+	islandCounterMap := make(map[int]int) // will contain the current island sizes based on label
+	// labeling the island numbers
+	var recurse func(int, int, [][]int) int
+	recurse = func(currRow, currCol int, grid [][]int) int {
+		// base case for traversal label marking
+		if currRow < 0 || currCol < 0 || currRow >= rowLen || currCol >= colLen ||
+			grid[currRow][currCol] == 0 || grid[currRow][currCol] == labelCounter {
+			return 0
+		}
+		grid[currRow][currCol] = labelCounter // assigning current label counter
+		islandCounter := 1
+
+		for _, direction := range directions {
+			row, col := direction[0], direction[1]
+			newRow := currRow + row
+			newCol := currCol + col
+			islandCounter += recurse(newRow, newCol, grid) // getting island counter size
+		}
+		return islandCounter
+	}
+	//main loop to collec the largest area
+	for row := 0; row < rowLen; row++ {
+		for col := 0; col < colLen; col++ {
+			if grid[row][col] == 1 {
+				islandSize := recurse(row, col, grid)
+				islandCounterMap[labelCounter] = islandSize
+				labelCounter++ // increasing the label counter with every area coverage
+			}
+		}
+	}
+	zeroCounter := 0
+	// getting total max area possible after one swap
+	for row := 0; row < rowLen; row++ {
+		for col := 0; col < colLen; col++ {
+			if grid[row][col] == 0 {
+				zeroCounter++
+				// checking each neighboard without any repetition
+				localMax := 1
+				localRange := make(map[int]bool)
+				for _, dir := range directions {
+					newRow := dir[0] + row
+					newCol := dir[1] + col
+					if newRow >= 0 && newCol >= 0 && newRow < rowLen && newCol < colLen {
+						currNeighbor := grid[newRow][newCol]
+						localRange[currNeighbor] = true
+					}
+				}
+				for section, _ := range localRange {
+					occurence := islandCounterMap[section]
+					localMax += occurence
+				}
+				maxIslandArea = max(maxIslandArea, localMax)
+			}
+		}
+	}
+	if zeroCounter == 0 {
+		return rowLen * colLen
+	}
+	return maxIslandArea
+}
+
+// dfs grid problem
+func findMaxFish(grid [][]int) int {
+	maxFishCount := 0
+	rowLen := len(grid)
+	colLen := len(grid[0])
+	visitedDims := make(map[[2]int]bool)
+	directions := [][]int{{0, 1}, {0, -1}, {-1, 0}, {1, 0}}
+
+	// recursion problem
+	var recurse func(int, int, [][]int, map[[2]int]bool) int
+	recurse = func(currRow int, currCol int, grid [][]int, visited map[[2]int]bool) int {
+		// main base case
+		if currRow < 0 || currCol < 0 || currRow >= rowLen || currCol >= colLen || grid[currRow][currCol] == 0 {
+			return 0
+		}
+		// memoized base case
+		key := [2]int{currRow, currCol}
+		if visited[key] {
+			return 0
+		}
+		visited[key] = true
+		currCount := grid[currRow][currCol]
+		for _, dir := range directions {
+			newRow := dir[0] + currRow
+			newCol := dir[1] + currCol
+			currCount += recurse(newRow, newCol, grid, visited)
+		}
+		return currCount
+	}
+
+	for row := 0; row < rowLen; row++ {
+		for col := 0; col < colLen; col++ {
+			currGridCell := grid[row][col]
+			if currGridCell > 0 {
+				currMaxFish := recurse(row, col, grid, visitedDims)
+				maxFishCount = max(currMaxFish, maxFishCount)
+			}
+		}
+	}
+
+	return maxFishCount
+}
