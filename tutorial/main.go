@@ -6263,3 +6263,49 @@ func findMaxFish(grid [][]int) int {
 
 	return maxFishCount
 }
+
+// using dfs to solve from each vertex and checking the maxium range
+func maximumDetonation(bombs [][]int) int {
+	n := len(bombs)
+	triggers := make([][]int, len(bombs))
+	maxDetonation := 0
+	// preprocessing the triggers
+	for index := 0; index < n; index++ {
+		pair := bombs[index]
+		radius := pair[2]
+		for subIndex := 0; subIndex < n; subIndex++ {
+			if subIndex != index {
+				checkPair := bombs[subIndex]
+				dx := pair[0] - checkPair[0]
+				dy := pair[1] - checkPair[1]
+				if dx*dx+dy*dy <= radius*radius {
+					// index the current bomb number to the triggers matrix
+					triggers[index] = append(triggers[index], subIndex)
+				}
+			}
+		}
+	}
+
+	// main recursive function to check
+	var recurse func(int, map[int]bool) int
+	recurse = func(currBombIndex int, visitedSet map[int]bool) int {
+		detonationCount := 1
+		// returning the max detonation count from the existing visited set
+		if visitedSet[currBombIndex] {
+			return 0
+		}
+		visitedSet[currBombIndex] = true // checking and setting it to true
+		for _, currTrigger := range triggers[currBombIndex] {
+			detonationCount += recurse(currTrigger, visitedSet)
+		}
+		return detonationCount
+	}
+
+	// main external loop to pass the chain triggers and check recursively for the maximum count
+	for index := 0; index < len(triggers); index++ {
+		visitedSet := make(map[int]bool)
+		maxDetonation = max(maxDetonation, recurse(index, visitedSet))
+	}
+
+	return maxDetonation
+}
