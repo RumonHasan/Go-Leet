@@ -6309,3 +6309,77 @@ func maximumDetonation(bombs [][]int) int {
 
 	return maxDetonation
 }
+
+// medium level questions to check for minimum operation required to convert each value to the same number
+func minOperationsGridUnitCell(grid [][]int, x int) int {
+	minOperationsRequired := 0
+	flattened := []int{}
+	rowLen := len(grid)
+
+	abs := func(currNum int) int {
+		if currNum < 0 {
+			return -currNum
+		}
+		return currNum
+	}
+	for currRow := 0; currRow < rowLen; currRow++ {
+		for _, currElement := range grid[currRow] {
+			flattened = append(flattened, currElement)
+		}
+	}
+	// initial check to check for potential availabilities
+	sort.Slice(flattened, func(i, j int) bool {
+		return flattened[i] < flattened[j]
+	})
+	firstEl := flattened[0]
+	for _, flatValue := range flattened {
+		if abs(flatValue-firstEl)%x != 0 {
+			return -1
+		}
+	}
+	n := len(flattened)
+	medianValue := flattened[n/2]
+	// final count of minimum ways
+	for _, flatValue := range flattened {
+		minCount := abs(flatValue-medianValue) / x
+		minOperationsRequired += minCount
+	}
+
+	return minOperationsRequired
+}
+
+// getting folder names and finding it out its unique
+func getFolderNames(names []string) []string {
+	folderResults := []string{}
+	n := len(names)
+	// dual map approach for used and counter when a new string is found
+	used := make(map[string]bool)
+	counter := make(map[string]int)
+
+	for index := 0; index < n; index++ {
+		currName := names[index]
+		if !used[currName] {
+			folderResults = append(folderResults, currName)
+			used[currName] = true
+			counter[currName] = 1
+		} else {
+			kCounter := counter[currName]
+			// checking whether plus 1 is available or not
+			for {
+				newName := currName + "(" + strconv.Itoa(kCounter) + ")"
+				if !used[newName] { // if there is no name available then kCounter++
+					break
+				}
+				kCounter++
+			}
+			// updating the name with the new series
+			neededName := currName + "(" + strconv.Itoa(kCounter) + ")"
+			used[neededName] = true
+			folderResults = append(folderResults, neededName)
+			counter[currName] = kCounter + 1
+			counter[neededName] = 1
+		}
+	}
+
+	return folderResults
+}
