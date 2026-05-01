@@ -6383,3 +6383,50 @@ func getFolderNames(names []string) []string {
 
 	return folderResults
 }
+
+// getting the maximum offers possible
+func maximizeTheProfit(n int, offers [][]int) int {
+	maxProfit := 0
+	memo := make(map[int]int) // for memoized profit values
+	offerLen := len(offers)
+
+	// sort based on starting then binary search based on current end and next start
+	sort.Slice(offers, func(i, j int) bool {
+		endCurrent := offers[i][0]
+		endNext := offers[j][0]
+		return endCurrent < endNext
+	})
+
+	var recurse func(int) int
+	recurse = func(currentIndex int) int {
+		if currentIndex >= offerLen {
+			return 0
+		}
+		// memoized profit value
+		key := currentIndex
+		if value, found := memo[key]; found {
+			return value
+		}
+		localMaxProfit := 0
+		skippedCurrentState := recurse(currentIndex + 1)
+
+		// include current but check whether there are any internals or not
+		nextBestIdx := sort.Search(offerLen, func(i int) bool {
+			return offers[currentIndex][1] < offers[i][0] // the current end should be smaller than the next start
+		})
+		includeCurrentState := 0
+		if nextBestIdx >= offerLen {
+			includeCurrentState = offers[currentIndex][2]
+		} else {
+			includeCurrentState = offers[currentIndex][2] + recurse(nextBestIdx)
+		}
+		localMaxProfit = max(skippedCurrentState, includeCurrentState)
+
+		memo[key] = localMaxProfit
+		return localMaxProfit
+	}
+
+	maxProfit = recurse(0)
+
+	return maxProfit
+}
