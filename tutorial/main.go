@@ -6430,3 +6430,56 @@ func maximizeTheProfit(n int, offers [][]int) int {
 
 	return maxProfit
 }
+
+// finding minimum distance for circular query
+func solveQueries(nums []int, queries []int) []int {
+	answerList := make([]int, len(queries)) // final result
+	n := len(nums)
+	// getting the indices of similar numbers in the nums
+	groupMap := make(map[int][]int)
+	for index, val := range nums {
+		groupMap[val] = append(groupMap[val], index)
+	}
+
+	// abs value for current distance calculation in abs value
+	circleDistance := func(posOne, posTwo int) int {
+		distance := posOne - posTwo
+		if distance < 0 {
+			return -distance
+		}
+		return distance
+	}
+
+	for index, query := range queries {
+		currIndexList := groupMap[nums[query]]
+		currMinDistance := 0
+
+		// single value hence no distance needs to be calculated
+		if len(currIndexList) == 1 {
+			currMinDistance = -1
+			answerList[index] = currMinDistance
+		}
+
+		if len(currIndexList) > 1 {
+			currListLen := len(currIndexList)
+			// getting the next closes best pos to calculate
+			nextBestPos := sort.Search(currListLen, func(i int) bool {
+				return currIndexList[i] >= query
+			})
+
+			left := currIndexList[(nextBestPos-1+currListLen)%currListLen]
+			right := currIndexList[(nextBestPos+1)%currListLen]
+
+			dLeft := circleDistance(query, left)
+			dRight := circleDistance(query, right)
+
+			minLeft := min(dLeft, n-dLeft)
+			minRight := min(dRight, n-dRight)
+
+			answerList[index] = min(minLeft, minRight)
+
+		}
+	}
+
+	return answerList
+}
