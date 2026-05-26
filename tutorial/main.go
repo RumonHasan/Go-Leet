@@ -6483,3 +6483,26 @@ func solveQueries(nums []int, queries []int) []int {
 
 	return answerList
 }
+
+// easy level - grouping based on first two chars  using k count
+func prefixConnected(words []string, k int) int {
+	prefMap := make(map[string][]string)
+	groupCount := 0
+
+	for _, word := range words {
+		// base condition of the word has to be atleast k length
+		if len(word) >= k {
+			firstKChars := word[0:k]
+			prefMap[firstKChars] = append(prefMap[firstKChars], word)
+		}
+	}
+
+	for _, val := range prefMap {
+		currLen := len(val)
+		if currLen >= 2 {
+			groupCount++
+		}
+	}
+
+	return groupCount
+}
