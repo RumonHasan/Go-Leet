@@ -14,7 +14,7 @@ func CreateNewWordTrie() *WordDictionary {
 }
 
 // references the main CreateNewWordTrie function to create a new trie
-func Constructor() WordDictionary {
+func ConstructorTrie() WordDictionary {
 	return *CreateNewWordTrie()
 }
 
