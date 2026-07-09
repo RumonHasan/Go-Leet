@@ -19,25 +19,25 @@ func NewStreamTrie() *RootTrie {
 }
 
 // will create the root trie here and inject all the words and form the suffix tree
-func Constructor(words []string) StreamChecker {
-	root := NewStreamTrie()
-	for _, word := range words {
-		nodeRoot := root
-		//rev injection of every single char
-		for index := len(word) - 1; index >= 0; index-- {
-			byteChar := byte(word[index])
+// func Constructor(words []string) StreamChecker {
+// 	root := NewStreamTrie()
+// 	for _, word := range words {
+// 		nodeRoot := root
+// 		//rev injection of every single char
+// 		for index := len(word) - 1; index >= 0; index-- {
+// 			byteChar := byte(word[index])
 
-			if _, ok := nodeRoot.children[byteChar]; !ok {
-				nodeRoot.children[byteChar] = NewStreamTrie()
-			}
-			nodeRoot = nodeRoot.children[byteChar]
+// 			if _, ok := nodeRoot.children[byteChar]; !ok {
+// 				nodeRoot.children[byteChar] = NewStreamTrie()
+// 			}
+// 			nodeRoot = nodeRoot.children[byteChar]
 
-		}
-		nodeRoot.isWord = true
-	}
+// 		}
+// 		nodeRoot.isWord = true
+// 	}
 
-	return StreamChecker{root: root, stream: []byte{}}
-}
+// 	return StreamChecker{root: root, stream: []byte{}}
+// }
 
 func (this *StreamChecker) Query(letter byte) bool {
 	currRoot := this.root
